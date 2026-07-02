@@ -1,0 +1,273 @@
+import { useState, useEffect } from "react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import {Pencil } from "lucide-react";
+
+export default function EditProfileDialog({
+  user,
+  fullWidth = false,
+  onSave,
+}) {
+  const [open, setOpen] = useState(false);
+
+  const [form, setForm] = useState(user);
+
+  useEffect(() => {
+    setForm(user);
+  }, [user]);
+
+  const initials = `${form.firstname?.charAt(0) ?? ""}${
+    form.lastname?.charAt(0) ?? ""
+  }`.toUpperCase();
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+
+  function handleSave() {
+    if (onSave) {
+      onSave(form);
+    }
+
+    setOpen(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className={fullWidth ? "w-full mt-5" : "w-full mt-6"}>
+          <Pencil className="mr-2 h-4 w-4" />
+          Edit Profile
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl">
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+
+          <DialogDescription>
+            Update your account information.
+          </DialogDescription>
+        </DialogHeader>
+        {/* Form */}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-2">
+            <Label>Student ID</Label>
+
+            <Input
+              name="student_id"
+              value={form.student_id}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Email</Label>
+
+            <Input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>First Name</Label>
+
+            <Input
+              name="firstname"
+              value={form.firstname}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Middle Name</Label>
+
+            <Input
+              name="middlename"
+              value={form.middlename}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Last Name</Label>
+
+            <Input
+              name="lastname"
+              value={form.lastname}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Status</Label>
+
+            <Select
+              value={form.status}
+              onValueChange={(value) =>
+                setForm({
+                  ...form,
+                  status: value,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="Active">
+                  Active
+                </SelectItem>
+
+                <SelectItem value="inactive">
+                  inactive
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Course */}
+
+          <div className="space-y-2">
+            <Label>Course</Label>
+
+            <Select
+              value={form.course}
+              onValueChange={(value) =>
+                setForm({
+                  ...form,
+                  course: value,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Course" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="BS Information Technology">
+                  BS Information Technology
+                </SelectItem>
+
+                <SelectItem value="BS Computer Science">
+                  BS Computer Science
+                </SelectItem>
+
+                <SelectItem value="BS Information Systems">
+                  BS Information Systems
+                </SelectItem>
+
+                <SelectItem value="BS Criminology">
+                  BS Criminology
+                </SelectItem>
+
+                <SelectItem value="BS Education">
+                  BS Education
+                </SelectItem>
+
+                <SelectItem value="BS Business Administration">
+                  BS Business Administration
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Year */}
+
+          <div className="space-y-2">
+            <Label>Year Level</Label>
+
+            <Select
+              value={form.year}
+              onValueChange={(value) =>
+                setForm({
+                  ...form,
+                  year: value,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Year" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="1st Year">
+                  1st Year
+                </SelectItem>
+
+                <SelectItem value="2nd Year">
+                  2nd Year
+                </SelectItem>
+
+                <SelectItem value="3rd Year">
+                  3rd Year
+                </SelectItem>
+
+                <SelectItem value="4th Year">
+                  4th Year
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Address */}
+
+          <div className="space-y-2 md:col-span-2">
+            <Label>Address</Label>
+
+            <Input
+              name="address"
+              value={form.address}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="mt-8">
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+          >
+            Cancel
+          </Button>
+
+          <Button onClick={handleSave}>
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
