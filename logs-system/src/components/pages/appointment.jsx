@@ -28,7 +28,7 @@ export default function Appointments() {
       purpose: "Good Moral Certificate",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
-      ScheduleDate: "2025-06-30",
+      ScheduleDate: "2025-07-02",
       status: "Pending",
     },
     {
@@ -36,7 +36,7 @@ export default function Appointments() {
       purpose: "Student Clearance",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
-      ScheduleDate: "2026-05-01",
+      ScheduleDate: "2026-05-10",
       status: "Processing",
     },
     {
@@ -44,7 +44,7 @@ export default function Appointments() {
       purpose: "TES Scholarship",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
-      ScheduleDate: "2025-06-30",
+      ScheduleDate: "2025-07-9",
       status: "Pending",
     },
     {
@@ -52,7 +52,7 @@ export default function Appointments() {
       purpose: "Student Clearance",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
-      ScheduleDate: "2026-05-01",
+      ScheduleDate: "2026-05-15",
       status: "Processing",
     },
     {
@@ -60,7 +60,7 @@ export default function Appointments() {
       purpose: "ID Validation",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
-      ScheduleDate: "2025-06-28",
+      ScheduleDate: "2025-06-30",
       status: "Processing",
     },
     {
@@ -68,7 +68,7 @@ export default function Appointments() {
       purpose: "TES Scholarship",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
-      ScheduleDate: "2025-06-30",
+      ScheduleDate: "2025-06-31",
       status: "Pending",
     },
     {
@@ -76,7 +76,7 @@ export default function Appointments() {
       purpose: "Request ID Form",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
-      ScheduleDate: "2026-05-12",
+      ScheduleDate: "2026-05-16",
       status: "Processing",
     },
     {
@@ -84,7 +84,7 @@ export default function Appointments() {
       purpose: "Affidavit of Loss",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
-      ScheduleDate: "2025-06-30",
+      ScheduleDate: "2025-06-31",
       status: "Processing",
     },
   ];
