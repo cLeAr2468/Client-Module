@@ -18,7 +18,7 @@ import DashboardHeader from "@/components/layout/dashboard-header";
 const Transactions = () => {
   const transactions = [
     {
-      RequestDate: "Jun 30, 2025",
+      date: "Jun 30, 2025",
       purpose: "Good Moral Certificate",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
@@ -26,7 +26,7 @@ const Transactions = () => {
       status: "Completed",
     },
     {
-      RequestDate: "May 1, 2026",
+      date: "May 1, 2026",
       purpose: "Student Clearance",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
@@ -34,7 +34,7 @@ const Transactions = () => {
       status: "Rejected",
     },
     {
-      RequestDate: "Jun 30, 2025",
+      date: "Jun 30, 2025",
       purpose: "TES Scholarship",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
@@ -42,7 +42,7 @@ const Transactions = () => {
       status: "Completed",
     },
     {
-      RequestDate: "May 1, 2026",
+      date: "May 1, 2026",
       purpose: "Student Clearance",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
@@ -50,7 +50,7 @@ const Transactions = () => {
       status: "Completed",
     },
     {
-      RequestDate: "Jun 28, 2025",
+      date: "Jun 28, 2025",
       purpose: "ID Validation",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
@@ -58,7 +58,7 @@ const Transactions = () => {
       status: "Rejected",
     },
     {
-      RequestDate: "Jun 30, 2025",
+      date: "Jun 30, 2025",
       purpose: "TES Scholarship",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
@@ -66,7 +66,7 @@ const Transactions = () => {
       status: "Completed",
     },
     {
-      RequestDate: "May 12, 2026",
+      date: "May 12, 2026",
       purpose: "Request ID Form",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
@@ -74,7 +74,7 @@ const Transactions = () => {
       status: "Completed",
     },
     {
-      RequestDate: "Jun 30, 2025",
+      date: "Jun 30, 2025",
       purpose: "Affidavit of Loss",
       address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
