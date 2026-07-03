@@ -1,4 +1,5 @@
-import { useState } from "react";
+// ...existing code...
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar, Clock } from "lucide-react";
 
-export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
+export default function EditAppointmentDialog({ open, onOpenChange, initialData = null, onSubmit }) {
   const [formData, setFormData] = useState({
     scheduleDate: "",
     purpose: "",
@@ -48,27 +49,42 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     "03:30 PM",
   ];
 
+  useEffect(() => {
+    if (open && initialData) {
+      setFormData({
+        scheduleDate: initialData.date || "",
+        purpose: initialData.purpose || "",
+        // put full address into street for now
+        street: initialData.address || "",
+        barangay: "",
+        city: "",
+        province: "",
+        timeSlot: initialData.timeSlot || "",
+      });
+    }
+    if (!open && !initialData) {
+      setFormData({
+        scheduleDate: "",
+        purpose: "",
+        street: "",
+        barangay: "",
+        city: "",
+        province: "",
+        timeSlot: "",
+      });
+    }
+  }, [open, initialData]);
+
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = () => {
-    if (onSubmit) {
-      onSubmit(formData);
-    }
+    if (onSubmit) onSubmit(formData);
     onOpenChange(false);
   };
 
   const handleCancel = () => {
-    setFormData({
-      scheduleDate: "",
-      purpose: "",
-      street: "",
-      barangay: "",
-      city: "",
-      province: "",
-      timeSlot: "",
-    });
     onOpenChange(false);
   };
 
@@ -77,14 +93,13 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
       <DialogContent className="max-h-[95vh] w-[95vw] max-w-2xl overflow-y-auto rounded-2xl p-0 lg:max-w-4xl xl:max-w-5xl sm:rounded-3xl">
         <DialogHeader className="border-b p-4 sm:p-6 lg:p-8">
           <DialogTitle className="text-xl font-bold text-slate-800 sm:text-2xl lg:text-3xl">
-            New Appointment
+            Edit Appointment
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 p-4 sm:space-y-6 sm:p-6 lg:space-y-8 lg:p-8">
-          {/* Schedule Date & Purpose - Side by side on desktop */}
+          {/* Schedule Date & Purpose */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-            {/* Schedule Date */}
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-slate-700 lg:text-base">
                 Schedule Date
@@ -100,8 +115,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
               </div>
             </div>
 
-            {/* Purpose for Appointment */}
-<div className="space-y-2">
+            <div className="space-y-2">
               <Label className="text-sm font-semibold text-slate-700 lg:text-base">
                 Purpose for Appointment
               </Label>
@@ -131,7 +145,6 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
             </h3>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-6">
-              {/* Street / House No. */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-slate-600 sm:text-sm lg:text-base">
                   Street / House No.
@@ -144,7 +157,6 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                 />
               </div>
 
-              {/* Barangay */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-slate-600 sm:text-sm lg:text-base">
                   Barangay
@@ -157,7 +169,6 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                 />
               </div>
 
-              {/* City / Municipality */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-slate-600 sm:text-sm lg:text-base">
                   City / Municipality
@@ -170,7 +181,6 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                 />
               </div>
 
-              {/* Province */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-slate-600 sm:text-sm lg:text-base">
                   Province
@@ -191,7 +201,6 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
               Select Time Slot
             </h3>
 
-            {/* Period Selector */}
             <div className="flex gap-2 sm:gap-4 lg:gap-6">
               <button
                 type="button"
@@ -219,7 +228,6 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
               </button>
             </div>
 
-            {/* Time Slots Grid */}
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-6 lg:gap-4">
               {(selectedPeriod === "morning" ? morningSlots : afternoonSlots).map(
                 (slot) => (

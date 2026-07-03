@@ -19,65 +19,50 @@ const Transactions = () => {
   const transactions = [
     {
       date: "Jun 30, 2025",
-      dateValue: "2025-06-30",
-      student: "Criscel Jane",
       purpose: "Good Moral Certificate",
       address: "Brgy. Quezon, San Jorge",
-      course: "BSA",
+      course: "BSIT",
+      ScheduleDate: "2025-06-30",
       status: "Completed",
     },
     {
       date: "Jun 30, 2025",
-      dateValue: "2025-06-30",
-      student: "Lean Cabarles",
       purpose: "TES Scholarship",
-      address: "Brgy. Erenas, San Jorge",
-      course: "BEED",
-      status: "Pending",
+      address: "Brgy. Quezon, San Jorge",
+      course: "BSIT",
+      ScheduleDate: "2025-06-30",
+      status: "Rejected",
     },
     {
       date: "May 1, 2026",
-      dateValue: "2026-05-01",
-      student: "Kyla Aliman",
       purpose: "Student Clearance",
-      address: "Gandara Samar",
+      address: "Brgy. Quezon, San Jorge",
       course: "BSIT",
-      status: "Processing",
+      ScheduleDate: "2026-05-01",
+      status: "Completed",
     },
     {
       date: "Jun 28, 2025",
-      dateValue: "2025-06-28",
-      student: "Renato Bordallo",
-      purpose: "ID Validation",
-      address: "Pagsanghan Samar",
-      course: "BSCRIM",
-      status: "Processing",
-    },
-    {
-      date: "Jun 30, 2025",
-      dateValue: "2025-06-30",
-      student: "Kathy Acera",
-      purpose: "TES Scholarship",
-      address: "Brgy. Aurora, San Jorge",
-      course: "BTLED",
-      status: "Pending",
-    },
-    {
-      date: "May 12, 2026",
-      dateValue: "2026-05-12",
-      student: "Miguel Manozo",
-      purpose: "Request ID Form",
-      address: "Brgy. Catores, Gandara",
-      course: "BSF",
+      purpose: "Student Clearance",
+      address: "Brgy. Quezon, San Jorge",
+      course: "BSIT",
+      ScheduleDate: "2025-06-28",
       status: "Completed",
     },
     {
       date: "Jun 30, 2025",
-      dateValue: "2025-06-30",
-      student: "Edriel Gabuya",
-      purpose: "Affidavit of Loss",
-      address: "Brgy. Blanca, San Jorge",
-      course: "BSABE",
+      purpose: "Student Clearance",
+      address: "Brgy. Quezon, San Jorge",
+      course: "BSIT",
+      ScheduleDate: "2025-06-30",
+      status: "Completed",
+    },
+    {
+      date: "May 12, 2026",
+      purpose: "Request ID Form",
+      address: "Brgy. Quezon, San Jorge",
+      course: "BSIT",
+      ScheduleDate: "2026-05-12",
       status: "Completed",
     },
   ];
@@ -106,7 +91,7 @@ const Transactions = () => {
     switch (status) {
       case "Completed":
         return "bg-green-100 text-green-700 hover:bg-green-100";
-      case "Pending":
+      case "Rejected":
         return "bg-red-100 text-red-700 hover:bg-red-100";
       case "Processing":
         return "bg-blue-100 text-blue-700 hover:bg-blue-100";
@@ -121,17 +106,15 @@ const Transactions = () => {
     switch (status) {
       case "Completed":
         return "bg-green-600 hover:bg-green-700 text-white";
-      case "Pending":
+      case "Rejected":
         return "bg-red-600 hover:bg-red-700 text-white";
-      case "Processing":
-        return "bg-blue-600 hover:bg-blue-700 text-white";
       default:
         return "bg-[#15592F] hover:bg-[#124b28] text-white";
     }
   };
 
   const renderFilterButtons = () =>
-    ["All", "Completed", "Pending", "Processing"].map((status) => (
+    ["All", "Completed", "Rejected"].map((status) => (
       <Button
         key={status}
         variant={filter === status ? "default" : "outline"}
@@ -183,10 +166,10 @@ const Transactions = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Date</TableHead>
-                          <TableHead>Student</TableHead>
                           <TableHead>Purpose</TableHead>
                           <TableHead>Address</TableHead>
                           <TableHead>Course</TableHead>
+                          <TableHead>Schedule Date</TableHead>
                           <TableHead>Status</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -196,12 +179,10 @@ const Transactions = () => {
                           filteredTransactions.map((item, index) => (
                             <TableRow key={index}>
                               <TableCell>{item.date}</TableCell>
-                              <TableCell className="font-medium">
-                                {item.student}
-                              </TableCell>
                               <TableCell>{item.purpose}</TableCell>
                               <TableCell>{item.address}</TableCell>
                               <TableCell>{item.course}</TableCell>
+                              <TableCell>{item.ScheduleDate}</TableCell>
                               <TableCell>
                                 <Badge className={getStatusColor(item.status)}>
                                   {item.status}
@@ -284,6 +265,12 @@ const Transactions = () => {
                               Course
                             </p>
                             <p>{item.course}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase">
+                              Schedule Date
+                            </p>
+                            <p>{item.ScheduleDate}</p>
                           </div>
                         </div>
                       </CardContent>

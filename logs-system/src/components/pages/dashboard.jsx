@@ -6,7 +6,6 @@ import {
   UserCheck,
   FileText,
   Activity,
-  TrendingUp,
   Clock
 } from "lucide-react";
 export default function Dashboard() {
@@ -101,9 +100,8 @@ export default function Dashboard() {
                 </h3>
               </div>
               <div className="space-y-2 text-sm text-gray-600">
-                <p>• New student registration: John Doe</p>
-                <p>• Report submitted by Jane Smith</p>
-                <p>• User profile updated: Admin</p>
+                <p>• New Appointment Request</p>
+                <p>• User profile updated</p>
               </div>
             </CardContent>
           </Card>
@@ -196,12 +194,9 @@ export default function Dashboard() {
                   Recent Activity
                 </h3>
               </div>
-              <div className="space-y-3 text-base text-gray-700">
-                <p>• New student registration: John Doe</p>
-                <p>• Report submitted by Jane Smith</p>
-                <p>• User profile updated: Admin</p>
-                <p>• Course enrollment completed: Computer Science</p>
-                <p>• System maintenance scheduled for tomorrow</p>
+             <div className="space-y-2 text-sm text-gray-600">
+                <p>• New Appointment Request</p>
+                <p>• User profile updated</p>
               </div>
             </CardContent>
           </Card>

@@ -29,14 +29,14 @@ import {
 export default function ProfileDisplay() {
     const [user, setUser] = useState({
   profile: "",
-  student_id: "2022-00045",
-  firstname: "Jerald",
-  middlename: "C.",
-  lastname: "Reyes",
+  student_id: "23-SJ00404",
+  firstname: "Criscel jane ",
+  middlename: "N.",
+  lastname: "Herrera",
   course: "BS Information Technology",
   year: "4th Year",
-  email: "jerald@gmail.com",
-  address: "Calbayog City, Samar",
+  email: "herracrisceljane@gmail.com",
+  address: "Brgy, Quezon San Jorge samar",
   status: "Active",
 });
 
