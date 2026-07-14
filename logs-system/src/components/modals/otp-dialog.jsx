@@ -14,28 +14,82 @@ import {
 } from "@/components/ui/input-otp";
 
 import { ShieldCheck, Clock3, CheckCircle2, ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function VerifyOtpDialog({
   open,
   onOpenChange,
-  email = "email@email.com",
+  email = "reyesjerald638@gmail.com",
   onBack,
   onVerify,
+  onResend,
+  loading = false,
+  error = "",
 }) {
   const [otp, setOtp] = useState("");
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [localError, setLocalError] = useState("");
 
-  const handleVerify = () => {
-    console.log(otp);
-    // Add your verification logic here
+  // Countdown timer
+  useEffect(() => {
+    if (!open) {
+      setTimeLeft(300);
+      setOtp("");
+      setLocalError("");
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [open]);
+
+  // Format time as MM:SS
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleVerify = async () => {
+    if (!otp || otp.length !== 6) {
+      setLocalError("Please enter a complete 6-digit OTP");
+      return;
+    }
+
+    setLocalError("");
     
-    // If verification is successful, trigger onVerify callback
-    if (onVerify) {
-      onVerify();
+    try {
+      if (onVerify) {
+        await onVerify(otp);
+      }
+    } catch (err) {
+      setLocalError(err.message || "Invalid OTP. Please try again.");
+    }
+  };
+
+  const handleResend = async () => {
+    setOtp("");
+    setTimeLeft(300);
+    setLocalError("");
+    
+    if (onResend) {
+      await onResend();
     }
   };
 
   const handleBack = () => {
+    setOtp("");
+    setLocalError("");
+    
     if (onBack) {
       onBack();
     } else {
@@ -79,6 +133,7 @@ export default function VerifyOtpDialog({
               maxLength={6}
               value={otp}
               onChange={(value) => setOtp(value)}
+              disabled={loading}
             >
               <InputOTPGroup className="gap-1.5 sm:gap-3">
                 <InputOTPSlot
@@ -114,26 +169,45 @@ export default function VerifyOtpDialog({
             <Clock3 size={16} />
             <span>
               Code expires in{" "}
-              <span className="font-semibold text-green-700">
-                04:32
+              <span className={`font-semibold ${timeLeft < 60 ? 'text-red-600' : 'text-green-700'}`}>
+                {formatTime(timeLeft)}
               </span>
             </span>
           </div>
 
+          {/* Error Message */}
+          {(error || localError) && (
+            <div className="mt-4 w-full rounded-lg bg-red-50 border border-red-200 p-3">
+              <p className="text-sm text-red-600 text-center">{error || localError}</p>
+            </div>
+          )}
+
           {/* Verify Button */}
           <Button
             onClick={handleVerify}
-            className="mt-6 h-12 w-full rounded-xl bg-green-700 text-base hover:bg-green-800 sm:mt-8 sm:h-14 sm:text-lg"
+            disabled={loading || otp.length !== 6 || timeLeft === 0}
+            className="mt-6 h-12 w-full rounded-xl bg-green-700 text-base hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed sm:mt-8 sm:h-14 sm:text-lg"
           >
-            <CheckCircle2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-            Verify
+            {loading ? (
+              <>
+                <span className="mr-2">Verifying...</span>
+                <span className="animate-spin">⏳</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                Verify
+              </>
+            )}
           </Button>
 
           {/* Resend */}
           <div className="mt-6 text-center text-sm text-gray-500 sm:mt-8 sm:text-base">
             Didn't receive the code?{" "}
             <button
-              className="font-semibold text-green-700 hover:underline"
+              onClick={handleResend}
+              disabled={loading}
+              className="font-semibold text-green-700 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Resend Code
             </button>
@@ -153,10 +227,11 @@ export default function VerifyOtpDialog({
           {/* Back */}
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 text-sm font-semibold text-green-700 hover:underline sm:text-base"
+            disabled={loading}
+            className="flex items-center gap-2 text-sm font-semibold text-green-700 hover:underline disabled:opacity-50 sm:text-base"
           >
             <ArrowLeft size={18} />
-            Back to Login
+            Back
           </button>
 
         </div>

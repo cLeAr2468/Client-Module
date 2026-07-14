@@ -4,7 +4,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EditProfileDialog from "@/components/modals/edit-profile";
 
 import { Badge } from "@/components/ui/badge";
@@ -24,21 +24,66 @@ import {
     GraduationCap,
     User,
     School,
+    Loader2,
 } from "lucide-react";
 
+import { getProfile } from "@/api/profileApi";
+
 export default function ProfileDisplay() {
-    const [user, setUser] = useState({
-  profile: "",
-  student_id: "23-SJ00404",
-  firstname: "Criscel jane ",
-  middlename: "N.",
-  lastname: "Herrera",
-  course: "BS Information Technology",
-  year: "4th Year",
-  email: "herracrisceljane@gmail.com",
-  address: "Brgy, Quezon San Jorge samar",
-  status: "Active",
-});
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Fetch user profile on component mount
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await getProfile();
+            setUser(response.user);
+        } catch (error) {
+            console.error("Failed to load profile:", error);
+            setError(error.message || "Failed to load profile");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Show loading state
+    if (loading) {
+        return (
+            <BackgroundLayout overlayColor="bg-green-950/70">
+                <DashboardHeader />
+                <div className="flex items-center justify-center h-[60vh]">
+                    <Loader2 className="w-8 h-8 animate-spin text-green-700" />
+                </div>
+            </BackgroundLayout>
+        );
+    }
+
+    // Show error state if no user data
+    if (error || !user) {
+        return (
+            <BackgroundLayout overlayColor="bg-green-950/70">
+                <DashboardHeader />
+                <div className="flex items-center justify-center h-[60vh]">
+                    <div className="text-center">
+                        <p className="text-red-500 mb-2">{error || "Failed to load profile data"}</p>
+                        <button 
+                            onClick={fetchProfile}
+                            className="text-green-700 hover:underline"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </BackgroundLayout>
+        );
+    }
 
     // Generate initials
     const initials = `${user.firstname?.charAt(0) ?? ""}${user.lastname?.charAt(0) ?? ""
@@ -115,11 +160,7 @@ export default function ProfileDisplay() {
                                                     label="Email"
                                                     value={user.email}
                                                 />
-                                                <Info
-                                                    icon={<MapPin size={18} />}
-                                                    label="Address"
-                                                    value={user.address}
-                                                />
+
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -185,11 +226,7 @@ export default function ProfileDisplay() {
                                         label="Email"
                                         value={user.email}
                                     />
-                                    <Info
-                                        icon={<MapPin size={18} />}
-                                        label="Address"
-                                        value={user.address}
-                                    />
+        
                                 </div>
                             </div>
                         </CardContent>

@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar, Clock } from "lucide-react";
+import { createAppointment } from "@/api/appointmentApi";
 
 export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -29,6 +30,11 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   });
 
   const [selectedPeriod, setSelectedPeriod] = useState("morning");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Get today's date in YYYY-MM-DD format for min attribute
+  const today = new Date().toISOString().split('T')[0];
 
   const morningSlots = [
     "09:00 AM",
@@ -50,13 +56,72 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setError(""); // Clear error when user types
   };
 
-  const handleSubmit = () => {
-    if (onSubmit) {
-      onSubmit(formData);
+  const handleSubmit = async () => {
+    // Validate all required fields
+    if (!formData.scheduleDate) {
+      setError("Please select a schedule date");
+      return;
     }
-    onOpenChange(false);
+    if (!formData.purpose) {
+      setError("Please select a purpose for appointment");
+      return;
+    }
+    if (!formData.street) {
+      setError("Please enter your street/house number");
+      return;
+    }
+    if (!formData.barangay) {
+      setError("Please enter your barangay");
+      return;
+    }
+    if (!formData.city) {
+      setError("Please enter your city/municipality");
+      return;
+    }
+    if (!formData.province) {
+      setError("Please enter your province");
+      return;
+    }
+    if (!formData.timeSlot) {
+      setError("Please select a time slot");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await createAppointment(formData);
+      console.log("✅ Appointment created:", response);
+
+      // Show success message
+      alert(response.message || "Appointment created successfully!");
+
+      // Call parent onSubmit if provided
+      if (onSubmit) {
+        onSubmit(response.transaction);
+      }
+
+      // Reset form and close dialog
+      setFormData({
+        scheduleDate: "",
+        purpose: "",
+        street: "",
+        barangay: "",
+        city: "",
+        province: "",
+        timeSlot: "",
+      });
+      onOpenChange(false);
+    } catch (err) {
+      console.error("❌ Error creating appointment:", err);
+      setError(err.message || "Failed to create appointment. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -69,6 +134,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
       province: "",
       timeSlot: "",
     });
+    setError("");
     onOpenChange(false);
   };
 
@@ -82,6 +148,13 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
         </DialogHeader>
 
         <div className="space-y-4 p-4 sm:space-y-6 sm:p-6 lg:space-y-8 lg:p-8">
+          {/* Error Message */}
+          {error && (
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+              <p className="text-sm text-red-600 font-medium">{error}</p>
+            </div>
+          )}
+
           {/* Schedule Date & Purpose - Side by side on desktop */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
             {/* Schedule Date */}
@@ -95,13 +168,14 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                   type="date"
                   value={formData.scheduleDate}
                   onChange={(e) => handleInputChange("scheduleDate", e.target.value)}
+                  min={today}
                   className="h-10 rounded-lg border-2 pl-11 text-sm sm:h-12 sm:rounded-xl sm:text-base lg:h-14 lg:pl-14 lg:text-lg"
                 />
               </div>
             </div>
 
             {/* Purpose for Appointment */}
-<div className="space-y-2">
+            <div className="space-y-2">
               <Label className="text-sm font-semibold text-slate-700 lg:text-base">
                 Purpose for Appointment
               </Label>
@@ -196,11 +270,10 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
               <button
                 type="button"
                 onClick={() => setSelectedPeriod("morning")}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:flex-none sm:rounded-xl sm:px-4 sm:text-base lg:px-6 lg:py-3 lg:text-lg ${
-                  selectedPeriod === "morning"
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:flex-none sm:rounded-xl sm:px-4 sm:text-base lg:px-6 lg:py-3 lg:text-lg ${selectedPeriod === "morning"
                     ? "bg-green-700 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
                 Morning
@@ -208,11 +281,10 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
               <button
                 type="button"
                 onClick={() => setSelectedPeriod("afternoon")}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:flex-none sm:rounded-xl sm:px-4 sm:text-base lg:px-6 lg:py-3 lg:text-lg ${
-                  selectedPeriod === "afternoon"
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:flex-none sm:rounded-xl sm:px-4 sm:text-base lg:px-6 lg:py-3 lg:text-lg ${selectedPeriod === "afternoon"
                     ? "bg-green-700 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
                 Afternoon
@@ -227,11 +299,10 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                     key={slot}
                     type="button"
                     onClick={() => handleInputChange("timeSlot", slot)}
-                    className={`rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all sm:rounded-xl sm:px-4 sm:py-3 sm:text-base lg:py-4 lg:text-lg ${
-                      formData.timeSlot === slot
+                    className={`rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all sm:rounded-xl sm:px-4 sm:py-3 sm:text-base lg:py-4 lg:text-lg ${formData.timeSlot === slot
                         ? "border-green-700 bg-green-700 text-white shadow-lg"
                         : "border-gray-200 bg-white text-gray-700 hover:border-green-700 hover:bg-green-50 hover:shadow-md"
-                    }`}
+                      }`}
                   >
                     {slot}
                   </button>
@@ -247,6 +318,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
               onClick={handleCancel}
               variant="outline"
               className="h-11 flex-1 rounded-xl border-2 text-sm font-semibold hover:bg-gray-50 sm:h-12 sm:text-base lg:h-14 lg:text-lg"
+              disabled={loading}
             >
               CANCEL
             </Button>
@@ -254,8 +326,9 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
               type="button"
               onClick={handleSubmit}
               className="h-11 flex-1 rounded-xl bg-green-700 text-sm font-semibold hover:bg-green-800 sm:h-12 sm:text-base lg:h-14 lg:text-lg"
+              disabled={loading}
             >
-              VIEW SUMMARY
+              {loading ? "CREATING..." : "CREATE APPOINTMENT"}
             </Button>
           </div>
         </div>
