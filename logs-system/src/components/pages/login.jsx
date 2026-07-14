@@ -87,7 +87,15 @@ function Login() {
       console.log("✅ OTP sent:", response.message);
       
       // Show success message
-      alert(response.message);
+      let alertMessage = response.message;
+      
+      // FOR TESTING: If OTP is included in response (when email fails), show it
+      if (response.otp) {
+        alertMessage += `\n\n⚠️ TESTING MODE - Your OTP: ${response.otp}`;
+        alertMessage += `\n\nNote: Email sending failed. The OTP is shown here for testing only.`;
+      }
+      
+      alert(alertMessage);
       
       // Close forgot password dialog and open OTP dialog
       setShowForgotPassword(false);
@@ -138,7 +146,17 @@ function Login() {
     try {
       const response = await resendOtp(forgotEmail);
       console.log("✅ OTP resent:", response.message);
-      alert(response.message);
+      
+      // Show success message
+      let alertMessage = response.message;
+      
+      // FOR TESTING: If OTP is included in response (when email fails), show it
+      if (response.otp) {
+        alertMessage += `\n\n⚠️ TESTING MODE - Your OTP: ${response.otp}`;
+        alertMessage += `\n\nNote: Email sending failed. The OTP is shown here for testing only.`;
+      }
+      
+      alert(alertMessage);
     } catch (err) {
       console.error("❌ Error resending OTP:", err);
       setError(err.message || "Failed to resend OTP. Please try again.");
