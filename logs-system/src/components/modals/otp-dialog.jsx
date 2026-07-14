@@ -13,7 +13,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
-import { ShieldCheck, Clock3, CheckCircle2, ArrowLeft } from "lucide-react";
+import { ShieldCheck, Clock3, CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function VerifyOtpDialog({
@@ -29,6 +29,7 @@ export default function VerifyOtpDialog({
   const [otp, setOtp] = useState("");
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
   const [localError, setLocalError] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
 
   // Countdown timer
   useEffect(() => {
@@ -80,9 +81,17 @@ export default function VerifyOtpDialog({
     setOtp("");
     setTimeLeft(300);
     setLocalError("");
+    setResendLoading(true);
     
-    if (onResend) {
-      await onResend();
+    try {
+      if (onResend) {
+        await onResend();
+      }
+    } catch (err) {
+      console.error("Error resending OTP:", err);
+      setLocalError(err.message || "Failed to resend OTP");
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -206,10 +215,17 @@ export default function VerifyOtpDialog({
             Didn't receive the code?{" "}
             <button
               onClick={handleResend}
-              disabled={loading}
-              className="font-semibold text-green-700 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading || resendLoading}
+              className="font-semibold text-green-700 hover:underline disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1"
             >
-              Resend Code
+              {resendLoading ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Resend Code"
+              )}
             </button>
           </div>
 
