@@ -22,7 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import {Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react";
+import { updateProfile } from "@/api/profileApi";
 
 export default function EditProfileDialog({
   user,
@@ -30,8 +31,9 @@ export default function EditProfileDialog({
   onSave,
 }) {
   const [open, setOpen] = useState(false);
-
   const [form, setForm] = useState(user);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     setForm(user);
@@ -50,13 +52,28 @@ export default function EditProfileDialog({
     }));
   }
 
+  async function handleSave() {
+    try {
+      setLoading(true);
+      setError(null);
 
-  function handleSave() {
-    if (onSave) {
-      onSave(form);
+      // Call the API to update profile
+      const response = await updateProfile(form);
+
+      // Update local state with the response
+      if (onSave) {
+        onSave(response.user);
+      }
+
+      alert("Profile updated successfully!");
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      setError(error.message || "Failed to update profile");
+      alert(error.message || "Failed to update profile");
+    } finally {
+      setLoading(false);
     }
-
-    setOpen(false);
   }
 
   return (
@@ -176,31 +193,13 @@ export default function EditProfileDialog({
                 <SelectValue placeholder="Select Course" />
               </SelectTrigger>
 
-              <SelectContent>
-                <SelectItem value="BS Information Technology">
-                  BS Information Technology
-                </SelectItem>
-
-                <SelectItem value="BS Computer Science">
-                  BS Computer Science
-                </SelectItem>
-
-                <SelectItem value="BS Information Systems">
-                  BS Information Systems
-                </SelectItem>
-
-                <SelectItem value="BS Criminology">
-                  BS Criminology
-                </SelectItem>
-
-                <SelectItem value="BS Education">
-                  BS Education
-                </SelectItem>
-
-                <SelectItem value="BS Business Administration">
-                  BS Business Administration
-                </SelectItem>
-              </SelectContent>
+              <SelectContent className="text-sm">
+                    <SelectItem value="BSCS">BSCS</SelectItem>
+                    <SelectItem value="BSIT">BSIT</SelectItem>
+                    <SelectItem value="BSCOE">BSCOE</SelectItem>
+                    <SelectItem value="BSEE">BSEE</SelectItem>
+                    <SelectItem value="BSME">BSME</SelectItem>
+                  </SelectContent>
             </Select>
           </div>
 
@@ -244,27 +243,26 @@ export default function EditProfileDialog({
 
           {/* Address */}
 
-          <div className="space-y-2 md:col-span-2">
-            <Label>Address</Label>
-
-            <Input
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-            />
-          </div>
         </div>
 
         <DialogFooter className="mt-8">
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
+            disabled={loading}
           >
             Cancel
           </Button>
 
-          <Button onClick={handleSave}>
-            Save Changes
+          <Button onClick={handleSave} disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

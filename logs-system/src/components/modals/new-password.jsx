@@ -21,9 +21,12 @@ export default function CreateNewPasswordDialog({
   onOpenChange,
   onBack,
   onSuccess,
+  loading = false,
+  error = "",
 }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [localError, setLocalError] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -46,18 +49,44 @@ export default function CreateNewPasswordDialog({
     confirmPassword.length > 0 &&
     password === confirmPassword;
 
-  const handleResetPassword = () => {
-    // Add your password reset logic here
-    console.log("Resetting password...");
-    
-    if (onSuccess) {
-      onSuccess();
-    } else {
-      onOpenChange(false);
+  const handleResetPassword = async () => {
+    // Validate
+    if (!password || !confirmPassword) {
+      setLocalError("Please fill in all fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setLocalError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      setLocalError("Password must be at least 6 characters");
+      return;
+    }
+
+    if (score < 3) {
+      setLocalError("Please create a stronger password");
+      return;
+    }
+
+    setLocalError("");
+
+    try {
+      if (onSuccess) {
+        await onSuccess(password, confirmPassword);
+      }
+    } catch (err) {
+      setLocalError(err.message || "Failed to reset password");
     }
   };
 
   const handleBack = () => {
+    setPassword("");
+    setConfirmPassword("");
+    setLocalError("");
+    
     if (onBack) {
       onBack();
     } else {
@@ -110,12 +139,14 @@ export default function CreateNewPasswordDialog({
                 className="h-12 pl-11 pr-12 rounded-xl border-2 focus-visible:ring-green-700"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
 
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700"
+                disabled={loading}
+                className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 disabled:opacity-50"
               >
                 {showPassword ? (
                   <EyeOff size={20} />
@@ -169,6 +200,7 @@ export default function CreateNewPasswordDialog({
                 onChange={(e) =>
                   setConfirmPassword(e.target.value)
                 }
+                disabled={loading}
               />
 
               <div className="absolute right-3 top-3.5 flex items-center gap-2">
@@ -184,7 +216,8 @@ export default function CreateNewPasswordDialog({
                   onClick={() =>
                     setShowConfirm(!showConfirm)
                   }
-                  className="text-gray-500 hover:text-gray-700"
+                  disabled={loading}
+                  className="text-gray-500 hover:text-gray-700 disabled:opacity-50"
                 >
                   {showConfirm ? (
                     <EyeOff size={20} />
@@ -252,14 +285,30 @@ export default function CreateNewPasswordDialog({
             </div>
           </div>
 
+          {/* Error Message */}
+          {(error || localError) && (
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+              <p className="text-sm text-red-600">{error || localError}</p>
+            </div>
+          )}
+
           {/* Button */}
           <Button
             onClick={handleResetPassword}
-            disabled={!passwordsMatch || score < 3}
+            disabled={loading || !passwordsMatch || score < 3}
             className="h-14 w-full rounded-xl bg-green-700 text-base font-semibold hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Lock className="mr-2 h-5 w-5" />
-            Reset Password
+            {loading ? (
+              <>
+                <span className="mr-2">Resetting...</span>
+                <span className="animate-spin">⏳</span>
+              </>
+            ) : (
+              <>
+                <Lock className="mr-2 h-5 w-5" />
+                Reset Password
+              </>
+            )}
           </Button>
 
           {/* Divider */}
@@ -276,10 +325,11 @@ export default function CreateNewPasswordDialog({
           {/* Back */}
           <button 
             onClick={handleBack}
-            className="flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold text-green-700 hover:underline"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold text-green-700 hover:underline disabled:opacity-50"
           >
             <ArrowLeft size={18} />
-            Back to Login
+            Back
           </button>
 
         </div>

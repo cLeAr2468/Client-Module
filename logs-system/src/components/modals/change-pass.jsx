@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
+import { changePassword } from "@/api/profileApi";
 
 export function ChangePass({ open = false, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -19,18 +21,26 @@ export function ChangePass({ open = false, onOpenChange, onSubmit }) {
     confirmPassword: "",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (event) => {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+    setError(""); // Clear error when user types
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
+    // Validation
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
       setError("Please fill in all fields.");
+      return;
+    }
+
+    if (formData.newPassword.length < 6) {
+      setError("New password must be at least 6 characters.");
       return;
     }
 
@@ -39,12 +49,39 @@ export function ChangePass({ open = false, onOpenChange, onSubmit }) {
       return;
     }
 
-    onSubmit?.({
-      currentPassword: formData.currentPassword,
-      newPassword: formData.newPassword,
-    });
+    if (formData.currentPassword === formData.newPassword) {
+      setError("New password must be different from current password.");
+      return;
+    }
 
-    onOpenChange?.(false);
+    try {
+      setLoading(true);
+      
+      // Call the API to change password
+      const response = await changePassword(formData.currentPassword, formData.newPassword);
+      
+      // Show success message
+      alert(response.message || "Password changed successfully!");
+      
+      // Call the onSubmit callback if provided
+      onSubmit?.({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
+
+      // Reset form and close dialog
+      setFormData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      onOpenChange?.(false);
+    } catch (err) {
+      console.error("Failed to change password:", err);
+      setError(err.message || "Failed to change password. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -116,11 +153,23 @@ export function ChangePass({ open = false, onOpenChange, onSubmit }) {
               variant="outline"
               onClick={() => onOpenChange?.(false)}
               className="h-11 w-full rounded-xl sm:w-auto"
+              disabled={loading}
             >
               Cancel
             </Button>
-            <Button type="submit" className="h-11 w-full rounded-xl bg-green-700 hover:bg-green-800 sm:w-auto">
-              Save changes
+            <Button 
+              type="submit" 
+              className="h-11 w-full rounded-xl bg-green-700 hover:bg-green-800 sm:w-auto"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Changing...
+                </>
+              ) : (
+                "Save changes"
+              )}
             </Button>
           </DialogFooter>
         </form>

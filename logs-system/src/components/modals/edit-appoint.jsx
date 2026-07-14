@@ -1,4 +1,3 @@
-// ...existing code...
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -17,9 +16,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar, Clock } from "lucide-react";
+import { updateAppointment } from "@/api/appointmentApi";
 
 export default function EditAppointmentDialog({ open, onOpenChange, initialData = null, onSubmit }) {
   const [formData, setFormData] = useState({
+    id: null,
     scheduleDate: "",
     purpose: "",
     street: "",
@@ -30,6 +31,11 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
   });
 
   const [selectedPeriod, setSelectedPeriod] = useState("morning");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Get today's date in YYYY-MM-DD format for min attribute
+  const today = new Date().toISOString().split('T')[0];
 
   const morningSlots = [
     "09:00 AM",
@@ -51,19 +57,37 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
 
   useEffect(() => {
     if (open && initialData) {
+      // Format the schedule_date for input[type="date"]
+      const scheduleDate = initialData.schedule_date 
+        ? new Date(initialData.schedule_date).toISOString().split('T')[0]
+        : "";
+
       setFormData({
-        scheduleDate: initialData.date || "",
+        id: initialData.id,
+        scheduleDate: scheduleDate,
         purpose: initialData.purpose || "",
-        // put full address into street for now
-        street: initialData.address || "",
-        barangay: "",
-        city: "",
-        province: "",
-        timeSlot: initialData.timeSlot || "",
+        street: initialData.street_house_no || "",
+        barangay: initialData.brgy || "",
+        city: initialData.municipality || "",
+        province: initialData.province || "",
+        timeSlot: initialData.time_slot || "",
       });
-    }
-    if (!open && !initialData) {
+
+      // Set selected period based on time slot
+      if (initialData.time_slot) {
+        const isPM = initialData.time_slot.includes('PM');
+        const hour = parseInt(initialData.time_slot.split(':')[0]);
+        // Morning: 9-11 AM, Afternoon: 1-3 PM
+        if (isPM && hour >= 1 && hour <= 3) {
+          setSelectedPeriod("afternoon");
+        } else {
+          setSelectedPeriod("morning");
+        }
+      }
+    } else if (!open) {
+      // Reset form when dialog closes
       setFormData({
+        id: null,
         scheduleDate: "",
         purpose: "",
         street: "",
@@ -72,19 +96,74 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
         province: "",
         timeSlot: "",
       });
+      setSelectedPeriod("morning");
+      setError("");
     }
   }, [open, initialData]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setError(""); // Clear error when user types
   };
 
-  const handleSubmit = () => {
-    if (onSubmit) onSubmit(formData);
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    // Validate all required fields
+    if (!formData.scheduleDate) {
+      setError("Please select a schedule date");
+      return;
+    }
+    if (!formData.purpose) {
+      setError("Please select a purpose for appointment");
+      return;
+    }
+    if (!formData.street) {
+      setError("Please enter your street/house number");
+      return;
+    }
+    if (!formData.barangay) {
+      setError("Please enter your barangay");
+      return;
+    }
+    if (!formData.city) {
+      setError("Please enter your city/municipality");
+      return;
+    }
+    if (!formData.province) {
+      setError("Please enter your province");
+      return;
+    }
+    if (!formData.timeSlot) {
+      setError("Please select a time slot");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await updateAppointment(formData.id, formData);
+      console.log("✅ Appointment updated:", response);
+
+      // Show success message
+      alert(response.message || "Appointment updated successfully!");
+
+      // Call parent onSubmit if provided
+      if (onSubmit) {
+        onSubmit(response.transaction);
+      }
+
+      // Close dialog
+      onOpenChange(false);
+    } catch (err) {
+      console.error("❌ Error updating appointment:", err);
+      setError(err.message || "Failed to update appointment. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
+    setError("");
     onOpenChange(false);
   };
 
@@ -98,6 +177,13 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
         </DialogHeader>
 
         <div className="space-y-4 p-4 sm:space-y-6 sm:p-6 lg:space-y-8 lg:p-8">
+          {/* Error Message */}
+          {error && (
+            <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+              <p className="text-sm text-red-600 font-medium">{error}</p>
+            </div>
+          )}
+
           {/* Schedule Date & Purpose */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
             <div className="space-y-2">
@@ -110,6 +196,7 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
                   type="date"
                   value={formData.scheduleDate}
                   onChange={(e) => handleInputChange("scheduleDate", e.target.value)}
+                  min={today}
                   className="h-10 rounded-lg border-2 pl-11 text-sm sm:h-12 sm:rounded-xl sm:text-base lg:h-14 lg:pl-14 lg:text-lg"
                 />
               </div>
@@ -255,6 +342,7 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
               onClick={handleCancel}
               variant="outline"
               className="h-11 flex-1 rounded-xl border-2 text-sm font-semibold hover:bg-gray-50 sm:h-12 sm:text-base lg:h-14 lg:text-lg"
+              disabled={loading}
             >
               CANCEL
             </Button>
@@ -262,8 +350,9 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
               type="button"
               onClick={handleSubmit}
               className="h-11 flex-1 rounded-xl bg-green-700 text-sm font-semibold hover:bg-green-800 sm:h-12 sm:text-base lg:h-14 lg:text-lg"
+              disabled={loading}
             >
-              VIEW SUMMARY
+              {loading ? "UPDATING..." : "UPDATE APPOINTMENT"}
             </Button>
           </div>
         </div>

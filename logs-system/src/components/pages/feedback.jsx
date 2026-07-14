@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star, Loader2 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,10 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import BackgroundLayout from "@/components/layout/background-layout";
 import DashboardHeader from "@/components/layout/dashboard-header";
+import { submitFeedback } from "@/api/feedbackApi";
+
 export default function Feedback() {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const labels = {
     0: "Tap a star to rate",
@@ -21,33 +25,41 @@ export default function Feedback() {
     5: "Excellent",
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
+    // Validation
     if (rating === 0) {
-      alert("Please select a rating.");
+      setError("Please select a rating.");
       return;
     }
 
     if (!message.trim()) {
-      alert("Please enter your feedback.");
+      setError("Please enter your feedback.");
       return;
     }
 
-    const feedback = {
-      rating,
-      message,
-    };
+    try {
+      setLoading(true);
 
-    console.log(feedback);
+      // Submit feedback to backend
+      const response = await submitFeedback(rating, message.trim());
 
-    // TODO: Send to your API here
+      // Show success message
+      alert(response.message || "Feedback submitted successfully!");
 
-    alert("Feedback submitted successfully!");
-
-    setRating(0);
-    setHover(0);
-    setMessage("");
+      // Reset form
+      setRating(0);
+      setHover(0);
+      setMessage("");
+    } catch (err) {
+      console.error("Failed to submit feedback:", err);
+      setError(err.message || "Failed to submit feedback. Please try again.");
+      alert(err.message || "Failed to submit feedback. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -122,6 +134,7 @@ export default function Feedback() {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Tell us about your experience..."
               className="resize-none min-h-[130px] rounded-lg text-sm sm:text-base"
+              disabled={loading}
             />
 
             <div className="flex justify-end">
@@ -131,12 +144,27 @@ export default function Feedback() {
             </div>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           {/* Submit Button */}
           <Button
             onClick={handleSubmit}
             className="w-full h-11 sm:h-12 rounded-lg bg-green-800 hover:bg-green-900 text-sm sm:text-base font-semibold"
+            disabled={loading}
           >
-            Submit Feedback
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit Feedback"
+            )}
           </Button>
         </CardContent>
       </Card>

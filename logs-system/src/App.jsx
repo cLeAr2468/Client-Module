@@ -1,9 +1,13 @@
 import Reroutes from "@/components/routes/page-routes";
+import { Toaster } from "sonner";
 
 function App() {
   
   return (
-    <Reroutes/>
+    <>
+      <Reroutes/>
+      <Toaster position="top-right" richColors />
+    </>
   );
 }
 

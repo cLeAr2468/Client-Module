@@ -21,6 +21,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ChangePass from "@/components/modals/change-pass";
+import { logout } from "@/utils/auth";
+import { toast } from "sonner";
 
 export default function DashboardHeader() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -31,6 +33,34 @@ export default function DashboardHeader() {
   const handlePasswordChange = async ({ currentPassword, newPassword }) => {
     console.log("Change password:", { currentPassword, newPassword });
     // call your API here
+  };
+
+  const handleLogout = () => {
+    toast.warning(
+      <div>
+        <p className="font-semibold">Logout?</p>
+        <p className="text-sm">Are you sure you want to logout?</p>
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => {
+              logout();
+              toast.dismiss();
+              toast.success('Logged out successfully');
+            }}
+            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+          >
+            Yes, Logout
+          </button>
+          <button
+            onClick={() => toast.dismiss()}
+            className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      { duration: 10000 }
+    );
   };
 
   // Helper function to check if a path is active
@@ -166,7 +196,10 @@ export default function DashboardHeader() {
               </nav>
 
               <div className="flex flex-col gap-3">
-                <Button className="flex items-center gap-2 rounded-md bg-green-800 px-3 py-2 text-sm font-medium hover:bg-red-700">
+                <Button 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium hover:bg-red-700"
+                >
                   <LogOut className="h-4 w-4" />
                   Logout
                 </Button>
@@ -302,16 +335,16 @@ export default function DashboardHeader() {
                   </Link>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem asChild>
-                  <Link 
-                    to="/logout" 
-                    className={`flex cursor-pointer items-center gap-2 ${
-                      isActive("/logout") ? "bg-purple-100 text-purple-700 font-semibold" : ""
-                    }`}
-                  >
+                <DropdownMenuItem 
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    handleLogout();
+                  }}
+                >
+                  <div className="flex cursor-pointer items-center gap-2">
                     <LogOut className="h-4 w-4" />
                     Logout
-                  </Link>
+                  </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -1,8 +1,42 @@
 import { Button } from "@/components/ui/button";
 import Logo from "@/assets/nwssu 1.png"; // Your logo image
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { isAuthenticated, logout } from "@/utils/auth";
+import { LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Header() {
+  const navigate = useNavigate();
+  const isLoggedIn = isAuthenticated();
+
+  const handleLogout = () => {
+    toast.warning(
+      <div>
+        <p className="font-semibold">Logout?</p>
+        <p className="text-sm">Are you sure you want to logout?</p>
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={() => {
+              logout();
+              toast.dismiss();
+              toast.success('Logged out successfully');
+            }}
+            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+          >
+            Yes, Logout
+          </button>
+          <button
+            onClick={() => toast.dismiss()}
+            className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      { duration: 10000 }
+    );
+  };
+
   return (
     <header className="relative w-full overflow-hidden">
       {/* MOBILE VIEW - Visible only on mobile */}
@@ -39,17 +73,35 @@ export default function Header() {
 
           {/* Right Side - Mobile: Full width buttons */}
           <div className="flex w-full items-center gap-2">
-            <Link to="/login" className="flex-1">
-              <Button className="h-8 w-full rounded-md border border-white bg-green-800 text-sm font-semibold hover:bg-green-700">
-                Login
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link to="/dashboard" className="flex-1">
+                  <Button className="h-8 w-full rounded-md border border-white bg-green-800 text-sm font-semibold hover:bg-green-700">
+                    Go to Dashboard
+                  </Button>
+                </Link>
+                <Button 
+                  onClick={handleLogout}
+                  className="h-8 w-auto px-3 rounded-md border border-white bg-red-600 text-sm font-semibold hover:bg-red-700"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="flex-1">
+                  <Button className="h-8 w-full rounded-md border border-white bg-green-800 text-sm font-semibold hover:bg-green-700">
+                    Login
+                  </Button>
+                </Link>
 
-            <Link to="/register" className="flex-1">
-              <Button className="h-8 w-full rounded-md border border-white bg-green-800 text-sm font-semibold hover:bg-green-700">
-                Register
-              </Button>
-            </Link>
+                <Link to="/register" className="flex-1">
+                  <Button className="h-8 w-full rounded-md border border-white bg-green-800 text-sm font-semibold hover:bg-green-700">
+                    Register
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -88,17 +140,36 @@ export default function Header() {
 
           {/* Right Side - Desktop: Normal buttons */}
           <div className="flex items-center gap-4">
-            <Link to="/login">
-              <Button className="h-8 w-24 rounded-md border border-white bg-green-800 text-base font-semibold hover:bg-green-700">
-                Login
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link to="/dashboard">
+                  <Button className="h-9 px-6 rounded-md border border-white bg-green-800 text-base font-semibold hover:bg-green-700">
+                    Go to Dashboard
+                  </Button>
+                </Link>
+                <Button 
+                  onClick={handleLogout}
+                  className="h-9 px-4 rounded-md border border-white bg-red-600 text-base font-semibold hover:bg-red-700 flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button className="h-8 w-24 rounded-md border border-white bg-green-800 text-base font-semibold hover:bg-green-700">
+                    Login
+                  </Button>
+                </Link>
 
-            <Link to="/register">
-              <Button className="h-8 w-24 rounded-md border border-white bg-green-800 text-base font-semibold hover:bg-green-700">
-                Register
-              </Button>
-            </Link>
+                <Link to="/register">
+                  <Button className="h-8 w-24 rounded-md border border-white bg-green-800 text-base font-semibold hover:bg-green-700">
+                    Register
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

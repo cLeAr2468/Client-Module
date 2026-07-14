@@ -1,8 +1,6 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableHeader,
@@ -14,103 +12,108 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import BackgroundLayout from "@/components/layout/background-layout";
 import DashboardHeader from "@/components/layout/dashboard-header";
+import Pagination from "@/components/ui/pagination";
+import { RefreshCw } from "lucide-react";
+import { getUserAppointments } from "@/api/appointmentApi";
 
 const Transactions = () => {
-  const transactions = [
-    {
-      date: "Jun 30, 2025",
-      purpose: "Good Moral Certificate",
-      address: "Brgy. Quezon, San Jorge",
-      course: "BSIT",
-      ScheduleDate: "2025-07-02",
-      status: "Completed",
-    },
-    {
-      date: "May 1, 2026",
-      purpose: "Student Clearance",
-      address: "Brgy. Quezon, San Jorge",
-      course: "BSIT",
-      ScheduleDate: "2026-05-10",
-      status: "Rejected",
-    },
-    {
-      date: "Jun 30, 2025",
-      purpose: "TES Scholarship",
-      address: "Brgy. Quezon, San Jorge",
-      course: "BSIT",
-      ScheduleDate: "2025-07-9",
-      status: "Completed",
-    },
-    {
-      date: "May 1, 2026",
-      purpose: "Student Clearance",
-      address: "Brgy. Quezon, San Jorge",
-      course: "BSIT",
-      ScheduleDate: "2026-05-15",
-      status: "Completed",
-    },
-    {
-      date: "Jun 28, 2025",
-      purpose: "ID Validation",
-      address: "Brgy. Quezon, San Jorge",
-      course: "BSIT",
-      ScheduleDate: "2025-06-30",
-      status: "Rejected",
-    },
-    {
-      date: "Jun 30, 2025",
-      purpose: "TES Scholarship",
-      address: "Brgy. Quezon, San Jorge",
-      course: "BSIT",
-      ScheduleDate: "2025-06-31",
-      status: "Completed",
-    },
-    {
-      date: "May 12, 2026",
-      purpose: "Request ID Form",
-      address: "Brgy. Quezon, San Jorge",
-      course: "BSIT",
-      ScheduleDate: "2026-05-16",
-      status: "Completed",
-    },
-    {
-      date: "Jun 30, 2025",
-      purpose: "Affidavit of Loss",
-      address: "Brgy. Quezon, San Jorge",
-      course: "BSIT",
-      ScheduleDate: "2025-06-31",
-      status: "Rejected",
-    },
-  ];
-
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [filter, setFilter] = useState("All");
-  const [searchQuery] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Fetch appointments/transactions
+  const fetchTransactions = async () => {
+    setLoading(true);
+    setError("");
+    
+    try {
+      const response = await getUserAppointments();
+      console.log("✅ Transactions fetched:", response);
+      setTransactions(response.transactions || []);
+    } catch (err) {
+      console.error("❌ Error fetching transactions:", err);
+      setError(err.message || "Failed to load transaction history");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch on component mount
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Map backend status to display status
+  const getDisplayStatus = (status) => {
+    switch (status) {
+      case "pending":
+        return "Pending";
+      case "approved":
+        return "Processing";
+      case "completed":
+        return "Completed";
+      case "cancelled":
+        return "Cancelled";
+      case "rejected":
+        return "Rejected";
+      default:
+        return "Pending";
+    }
+  };
 
   const filteredTransactions = transactions.filter((item) => {
-    const statusMatch = filter === "All" || item.status === filter;
+    // Only show completed, cancelled, and rejected statuses
+    const allowedStatuses = ['completed', 'cancelled', 'rejected'];
+    
+    // Filter out pending and approved (processing)
+    if (!allowedStatuses.includes(item.status)) {
+      return false;
+    }
 
-    const searchMatch =
-      searchQuery === "" ||
-      item.student.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.course.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.date.toLowerCase().includes(searchQuery.toLowerCase());
+    // Map backend status to display status
+    const displayStatus = getDisplayStatus(item.status);
+    const statusMatch = filter === "All" || displayStatus === filter;
 
-    const dateMatch = selectedDate === "" || item.dateValue === selectedDate;
-
-    return statusMatch && searchMatch && dateMatch;
+    return statusMatch;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const getStatusColor = (status) => {
-    switch (status) {
+    const displayStatus = getDisplayStatus(status);
+    switch (displayStatus) {
       case "Completed":
         return "bg-green-100 text-green-700 hover:bg-green-100";
+      case "Cancelled":
+        return "bg-gray-100 text-gray-700 hover:bg-gray-100";
       case "Rejected":
         return "bg-red-100 text-red-700 hover:bg-red-100";
-      case "Processing":
-        return "bg-blue-100 text-blue-700 hover:bg-blue-100";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -122,6 +125,8 @@ const Transactions = () => {
     switch (status) {
       case "Completed":
         return "bg-green-600 hover:bg-green-700 text-white";
+      case "Cancelled":
+        return "bg-gray-600 hover:bg-gray-700 text-white";
       case "Rejected":
         return "bg-red-600 hover:bg-red-700 text-white";
       default:
@@ -130,7 +135,7 @@ const Transactions = () => {
   };
 
   const renderFilterButtons = () =>
-    ["All", "Completed", "Rejected"].map((status) => (
+    ["All", "Completed", "Cancelled", "Rejected"].map((status) => (
       <Button
         key={status}
         variant={filter === status ? "default" : "outline"}
@@ -147,28 +152,28 @@ const Transactions = () => {
       <div className="flex min-h-screen w-full">
         <main className="flex-1 overflow-auto">
           <div className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between mb-8">
-              <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-
-                <div className="w-full sm:w-[220px]">
-                  <label className="text-xl font-medium text-white mb-1 block">
-                    Filter by Date
-                  </label>
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="h-11 bg-white border-gray-200"
-                  />
-                </div>
-              </div>
-            </div>
-
             <div className="hidden md:block">
               <div className="flex flex-col gap-4 mb-6">
-                <h2 className="text-2xl font-semibold text-white">
-                  Transaction History
-                </h2>
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-semibold text-white">
+                    Transaction History
+                  </h2>
+                  <Button
+                    onClick={fetchTransactions}
+                    className="bg-gray-700 hover:bg-gray-800 text-white shadow-md h-10 rounded-md"
+                    disabled={loading}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600">{error}</p>
+                  </div>
+                )}
 
                 <div className="flex gap-2 flex-wrap">
                   {renderFilterButtons()}
@@ -177,50 +182,68 @@ const Transactions = () => {
 
               <Card className="border-0 shadow-sm rounded-2xl">
                 <CardContent className="p-6">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Purpose</TableHead>
-                          <TableHead>Address</TableHead>
-                          <TableHead>Course</TableHead>
-                          <TableHead>Schedule Date</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
+                  {loading ? (
+                    <div className="text-center py-10">
+                      <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                      <p className="text-gray-500">Loading transaction history...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Request Date</TableHead>
+                            <TableHead>Purpose</TableHead>
+                            <TableHead>Address</TableHead>
+                            <TableHead>Schedule Date</TableHead>
+                            <TableHead>Time Slot</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
 
-                      <TableBody>
-                        {filteredTransactions.length > 0 ? (
-                          filteredTransactions.map((item, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{item.date}</TableCell>
-                              <TableCell>{item.purpose}</TableCell>
-                              <TableCell>{item.address}</TableCell>
-                              <TableCell>{item.course}</TableCell>
-                              <TableCell>{item.ScheduleDate}</TableCell>
-                              <TableCell>
-                                <Badge className={getStatusColor(item.status)}>
-                                  {item.status}
-                                </Badge>
+                        <TableBody>
+                          {currentTransactions.length > 0 ? (
+                            currentTransactions.map((item) => (
+                              <TableRow key={item.id}>
+                                <TableCell>{formatDate(item.created_at)}</TableCell>
+                                <TableCell>{item.purpose}</TableCell>
+                                <TableCell>
+                                  {item.brgy}, {item.municipality}
+                                </TableCell>
+                                <TableCell>{formatDate(item.schedule_date)}</TableCell>
+                                <TableCell>{item.time_slot}</TableCell>
+                                <TableCell>
+                                  <Badge className={getStatusColor(item.status)}>
+                                    {getDisplayStatus(item.status)}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell
+                                colSpan={6}
+                                className="text-center py-8 text-gray-500"
+                              >
+                                {filter === "All"
+                                  ? "No transaction history found."
+                                  : `No ${filter} transactions found.`}
                               </TableCell>
                             </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell
-                              colSpan={6}
-                              className="text-center py-8 text-gray-500"
-                            >
-                              {searchQuery || selectedDate
-                                ? `No transactions found matching your search.`
-                                : `No ${filter} transactions found.`}
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+
+                  {/* Pagination for Desktop */}
+                  {!loading && filteredTransactions.length > itemsPerPage && (
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -228,78 +251,115 @@ const Transactions = () => {
             <div className="block md:hidden">
               <div className="flex flex-col gap-4 mb-6 items-center">
                 <h2 className="text-2xl font-semibold text-white">
-                  Transaction Records
+                  Transaction History
                 </h2>
 
-                <div className="flex gap-2 flex-wrap">
+                {/* Error Message */}
+                {error && (
+                  <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2 flex-wrap justify-center">
                   {renderFilterButtons()}
                 </div>
+
+                <Button
+                  onClick={fetchTransactions}
+                  className="bg-gray-700 hover:bg-gray-800 text-white shadow-md h-10 w-full rounded-md"
+                  disabled={loading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
               </div>
 
-              <div className="space-y-4">
-                {filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((item, index) => (
-                    <Card
-                      key={index}
-                      className="rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all"
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold text-[#15592F] text-lg">
-                              {item.student}
-                            </h3>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {item.date}
-                            </p>
+              {loading ? (
+                <Card className="rounded-2xl">
+                  <CardContent className="py-10 text-center">
+                    <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-500">Loading transaction history...</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {currentTransactions.length > 0 ? (
+                    currentTransactions.map((item) => (
+                      <Card
+                        key={item.id}
+                        className="rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all"
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold text-[#15592F] text-lg">
+                                {formatDate(item.created_at)}
+                              </h3>
+                              <p className="text-xs text-gray-500 mt-1">Request Date</p>
+                            </div>
+
+                            <Badge className={getStatusColor(item.status)}>
+                              {getDisplayStatus(item.status)}
+                            </Badge>
                           </div>
 
-                          <Badge className={getStatusColor(item.status)}>
-                            {item.status}
-                          </Badge>
-                        </div>
+                          <div className="border-t my-4"></div>
 
-                        <div className="border-t my-4"></div>
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase">
+                                Purpose
+                              </p>
+                              <p className="font-medium">{item.purpose}</p>
+                            </div>
 
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase">
-                              Purpose
-                            </p>
-                            <p className="font-medium">{item.purpose}</p>
-                          </div>
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase">
+                                Address
+                              </p>
+                              <p>{item.street_house_no}, {item.brgy}, {item.municipality}, {item.province}</p>
+                            </div>
 
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase">
-                              Address
-                            </p>
-                            <p>{item.address}</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <p className="text-xs text-gray-500 uppercase">
+                                  Schedule Date
+                                </p>
+                                <p>{formatDate(item.schedule_date)}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500 uppercase">
+                                  Time Slot
+                                </p>
+                                <p>{item.time_slot}</p>
+                              </div>
+                            </div>
                           </div>
-
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase">
-                              Course
-                            </p>
-                            <p>{item.course}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase">
-                              Schedule Date
-                            </p>
-                            <p>{item.ScheduleDate}</p>
-                          </div>
-                        </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <Card>
+                      <CardContent className="py-10 text-center text-gray-500">
+                        {filter === "All" 
+                          ? "No transaction history found." 
+                          : `No ${filter} transactions found.`
+                        }
                       </CardContent>
                     </Card>
-                  ))
-                ) : (
-                  <Card>
-                    <CardContent className="py-10 text-center text-gray-500">
-                      No transaction found.
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
+
+              {/* Pagination for Mobile */}
+              {!loading && filteredTransactions.length > itemsPerPage && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              )}
             </div>
           </div>
         </main>
