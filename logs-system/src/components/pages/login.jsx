@@ -79,6 +79,13 @@ function Login() {
       return;
     }
 
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(forgotEmail)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -86,15 +93,12 @@ function Login() {
       const response = await forgotPassword(forgotEmail);
       console.log("✅ OTP sent:", response.message);
       
-      // Show success message
+      // Show success message with alert
       let alertMessage = response.message;
-      
-      // FOR TESTING: If OTP is included in response (when email fails), show it
       if (response.otp) {
         alertMessage += `\n\n⚠️ TESTING MODE - Your OTP: ${response.otp}`;
         alertMessage += `\n\nNote: Email sending failed. The OTP is shown here for testing only.`;
       }
-      
       alert(alertMessage);
       
       // Close forgot password dialog and open OTP dialog
@@ -102,8 +106,15 @@ function Login() {
       setShowOtpDialog(true);
     } catch (err) {
       console.error("❌ Error sending OTP:", err);
-      setError(err.message || "Failed to send OTP. Please try again.");
-      alert(err.message || "Failed to send OTP. Please try again.");
+      
+      // Handle email not found error
+      if (err.error === 'email_not_found' || err.message?.includes('not found') || err.message?.includes('register')) {
+        setError(err.message || 'This email is not registered. Please register first.');
+        alert(`📧 Email Not Found\n\n${err.message || 'This email is not registered. Please register first.'}`);
+      } else {
+        setError(err.message || "Failed to send OTP. Please try again.");
+        alert(err.message || "Failed to send OTP. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
