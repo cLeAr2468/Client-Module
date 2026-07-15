@@ -107,7 +107,6 @@ function Login() {
       setShowOtpDialog(true);
     } catch (err) {
       console.error("❌ Error sending OTP:", err);
-      console.error("❌ Full error object:", JSON.stringify(err, null, 2));
       
       // Handle email not found error
       if (err.error === 'email_not_found' || err.message?.includes('not found') || err.message?.includes('register')) {
@@ -120,25 +119,8 @@ function Login() {
           { duration: 5000 }
         );
       } else {
-        // Show detailed error
-        const errorMsg = err.message || "Failed to send OTP. Please try again.";
-        const debugInfo = err.debug ? `\nEmail: ${err.debug.email}\nType: ${err.debug.user_type}\nError: ${err.debug.error_class}` : '';
-        
-        setError(errorMsg);
-        toast.error(
-          <div>
-            <p className="font-semibold">❌ Failed to Send OTP</p>
-            <p className="text-sm mt-1">{errorMsg}</p>
-            {err.debug && (
-              <p className="text-xs mt-1 opacity-75">
-                Check console for details
-              </p>
-            )}
-          </div>,
-          { duration: 7000 }
-        );
-        
-        console.error("📧 Email Debug Info:", err.debug);
+        setError(err.message || "Failed to send OTP. Please try again.");
+        toast.error(err.message || "Failed to send OTP. Please try again.");
       }
     } finally {
       setLoading(false);
