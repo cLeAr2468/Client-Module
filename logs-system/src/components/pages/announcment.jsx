@@ -85,7 +85,7 @@ export default function AnnouncementPage() {
                     {/* Cover Image */}
                     {announcement.cover_image && (
                       <img
-                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/storage/${announcement.cover_image}`}
+                        src={`http://127.0.0.1:8000/storage/${announcement.cover_image}`}
                         alt={announcement.title}
                         className="w-full h-40 object-cover rounded-lg mb-3"
                       />
@@ -159,7 +159,7 @@ export default function AnnouncementPage() {
                     {/* Cover Image */}
                     {announcement.cover_image && (
                       <img
-                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/storage/${announcement.cover_image}`}
+                        src={`http://127.0.0.1:8000/storage/${announcement.cover_image}`}
                         alt={announcement.title}
                         className="w-full h-64 object-cover rounded-lg mb-4"
                       />
