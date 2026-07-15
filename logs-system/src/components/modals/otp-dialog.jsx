@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/input-otp";
 
 import { ShieldCheck, Clock3, CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function VerifyOtpDialog({
   open,
@@ -24,85 +24,34 @@ export default function VerifyOtpDialog({
   onVerify,
   onResend,
   loading = false,
-  error = "",
 }) {
   const [otp, setOtp] = useState("");
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
-  const [localError, setLocalError] = useState("");
-  const [resendLoading, setResendLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState("");
 
-  // Countdown timer
-  useEffect(() => {
-    if (!open) {
-      setTimeLeft(300);
-      setOtp("");
-      setLocalError("");
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [open]);
-
-  // Format time as MM:SS
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleVerify = async () => {
-    if (!otp || otp.length !== 6) {
-      setLocalError("Please enter a complete 6-digit OTP");
-      return;
-    }
-
-    setLocalError("");
-    
-    try {
-      if (onVerify) {
-        await onVerify(otp);
-      }
-    } catch (err) {
-      setLocalError(err.message || "Invalid OTP. Please try again.");
-    }
-  };
-
-  const handleResend = async () => {
-    setOtp("");
-    setTimeLeft(300);
-    setLocalError("");
-    setResendLoading(true);
-    
-    try {
-      if (onResend) {
-        await onResend();
-      }
-    } catch (err) {
-      console.error("Error resending OTP:", err);
-      setLocalError(err.message || "Failed to resend OTP");
-    } finally {
-      setResendLoading(false);
+  const handleVerify = () => {
+    if (onVerify) {
+      onVerify(otp);
     }
   };
 
   const handleBack = () => {
-    setOtp("");
-    setLocalError("");
-    
     if (onBack) {
       onBack();
     } else {
       onOpenChange(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (onResend) {
+      setResendLoading(true);
+      try {
+        await onResend();
+      } catch (error) {
+        console.error("Error resending OTP:", error);
+      } finally {
+        setResendLoading(false);
+      }
     }
   };
 
@@ -178,24 +127,17 @@ export default function VerifyOtpDialog({
             <Clock3 size={16} />
             <span>
               Code expires in{" "}
-              <span className={`font-semibold ${timeLeft < 60 ? 'text-red-600' : 'text-green-700'}`}>
-                {formatTime(timeLeft)}
+              <span className="font-semibold text-green-700">
+                05:00
               </span>
             </span>
           </div>
 
-          {/* Error Message */}
-          {(error || localError) && (
-            <div className="mt-4 w-full rounded-lg bg-red-50 border border-red-200 p-3">
-              <p className="text-sm text-red-600 text-center">{error || localError}</p>
-            </div>
-          )}
-
           {/* Verify Button */}
           <Button
             onClick={handleVerify}
-            disabled={loading || otp.length !== 6 || timeLeft === 0}
-            className="mt-6 h-12 w-full rounded-xl bg-green-700 text-base hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed sm:mt-8 sm:h-14 sm:text-lg"
+            disabled={loading || otp.length !== 6}
+            className="mt-6 h-12 w-full rounded-xl bg-green-700 text-base hover:bg-green-800 sm:mt-8 sm:h-14 sm:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -244,10 +186,10 @@ export default function VerifyOtpDialog({
           <button
             onClick={handleBack}
             disabled={loading}
-            className="flex items-center gap-2 text-sm font-semibold text-green-700 hover:underline disabled:opacity-50 sm:text-base"
+            className="flex items-center gap-2 text-sm font-semibold text-green-700 hover:underline sm:text-base disabled:opacity-50"
           >
             <ArrowLeft size={18} />
-            Back
+            Back to Login
           </button>
 
         </div>

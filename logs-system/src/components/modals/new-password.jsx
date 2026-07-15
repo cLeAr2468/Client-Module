@@ -22,16 +22,14 @@ export default function CreateNewPasswordDialog({
   onBack,
   onSuccess,
   loading = false,
-  error = "",
 }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [localError, setLocalError] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const hasLength = password.length >= 8;
+  const hasLength = password.length >= 6;
   const hasUppercase = /[A-Z]/.test(password);
   const hasSpecial = /[0-9!@#$%^&*(),.?":{}|<>]/.test(password);
 
@@ -49,44 +47,15 @@ export default function CreateNewPasswordDialog({
     confirmPassword.length > 0 &&
     password === confirmPassword;
 
-  const handleResetPassword = async () => {
-    // Validate
-    if (!password || !confirmPassword) {
-      setLocalError("Please fill in all fields");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setLocalError("Passwords do not match");
-      return;
-    }
-
-    if (password.length < 6) {
-      setLocalError("Password must be at least 6 characters");
-      return;
-    }
-
-    if (score < 3) {
-      setLocalError("Please create a stronger password");
-      return;
-    }
-
-    setLocalError("");
-
-    try {
-      if (onSuccess) {
-        await onSuccess(password, confirmPassword);
-      }
-    } catch (err) {
-      setLocalError(err.message || "Failed to reset password");
+  const handleResetPassword = () => {
+    if (onSuccess) {
+      onSuccess(password, confirmPassword);
+    } else {
+      onOpenChange(false);
     }
   };
 
   const handleBack = () => {
-    setPassword("");
-    setConfirmPassword("");
-    setLocalError("");
-    
     if (onBack) {
       onBack();
     } else {
@@ -253,7 +222,7 @@ export default function CreateNewPasswordDialog({
                       : "text-gray-300"
                   }
                 />
-                <span>At least 8 characters</span>
+                <span>At least 6 characters</span>
               </div>
 
               <div className="flex items-center gap-2.5">
@@ -284,13 +253,6 @@ export default function CreateNewPasswordDialog({
 
             </div>
           </div>
-
-          {/* Error Message */}
-          {(error || localError) && (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-3">
-              <p className="text-sm text-red-600">{error || localError}</p>
-            </div>
-          )}
 
           {/* Button */}
           <Button
@@ -329,7 +291,7 @@ export default function CreateNewPasswordDialog({
             className="flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold text-green-700 hover:underline disabled:opacity-50"
           >
             <ArrowLeft size={18} />
-            Back
+            Back to Login
           </button>
 
         </div>
