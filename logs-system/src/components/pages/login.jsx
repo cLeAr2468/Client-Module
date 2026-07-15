@@ -11,6 +11,7 @@ import ForgotPass from "@/components/modals/forgot-pass";
 import VerifyOtpDialog from "@/components/modals/otp-dialog";
 import CreateNewPasswordDialog from "@/components/modals/new-password";
 import { login, forgotPassword, verifyOtp, resendOtp, resetPassword } from "@/api/authApi";
+import { toast } from "sonner";
 
 function Login() {
   const navigate = useNavigate();
@@ -35,11 +36,13 @@ function Login() {
     
     if (!loginEmail) {
       setLoginError("Please enter your email address");
+      toast.error("Please enter your email address");
       return;
     }
 
     if (!loginPassword) {
       setLoginError("Please enter your password");
+      toast.error("Please enter your password");
       return;
     }
 
@@ -60,13 +63,15 @@ function Login() {
       }
       
       // Show success message
-      alert(`Welcome back, ${response.user.fname}!`);
+      toast.success(`Welcome back, ${response.user.fname}!`);
       
       // Navigate to dashboard
       navigate("/dashboard");
     } catch (err) {
       console.error("❌ Login failed:", err);
-      setLoginError(err.message || "Invalid email or password. Please try again.");
+      const errorMsg = err.message || "Invalid email or password. Please try again.";
+      setLoginError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -76,6 +81,7 @@ function Login() {
   const handleForgotSubmit = async () => {
     if (!forgotEmail) {
       setError("Please enter your email address");
+      toast.error("Please enter your email address");
       return;
     }
 
@@ -83,6 +89,7 @@ function Login() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(forgotEmail)) {
       setError("Please enter a valid email address");
+      toast.error("Please enter a valid email address");
       return;
     }
 
@@ -93,13 +100,7 @@ function Login() {
       const response = await forgotPassword(forgotEmail);
       console.log("✅ OTP sent:", response.message);
       
-      // Show success message with alert
-      let alertMessage = response.message;
-      if (response.otp) {
-        alertMessage += `\n\n⚠️ TESTING MODE - Your OTP: ${response.otp}`;
-        alertMessage += `\n\nNote: Email sending failed. The OTP is shown here for testing only.`;
-      }
-      alert(alertMessage);
+      toast.success(response.message || "OTP sent to your email");
       
       // Close forgot password dialog and open OTP dialog
       setShowForgotPassword(false);
@@ -110,10 +111,16 @@ function Login() {
       // Handle email not found error
       if (err.error === 'email_not_found' || err.message?.includes('not found') || err.message?.includes('register')) {
         setError(err.message || 'This email is not registered. Please register first.');
-        alert(`📧 Email Not Found\n\n${err.message || 'This email is not registered. Please register first.'}`);
+        toast.error(
+          <div>
+            <p className="font-semibold">📧 Email Not Found</p>
+            <p className="text-sm mt-1">{err.message || 'This email is not registered. Please register first.'}</p>
+          </div>,
+          { duration: 5000 }
+        );
       } else {
         setError(err.message || "Failed to send OTP. Please try again.");
-        alert(err.message || "Failed to send OTP. Please try again.");
+        toast.error(err.message || "Failed to send OTP. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -124,6 +131,7 @@ function Login() {
   const handleOtpVerify = async (otpValue) => {
     if (!otpValue || otpValue.length !== 6) {
       setError("Please enter a valid 6-digit OTP");
+      toast.error("Please enter a valid 6-digit OTP");
       return;
     }
 
@@ -134,6 +142,8 @@ function Login() {
       const response = await verifyOtp(forgotEmail, otpValue);
       console.log("✅ OTP verified:", response.message);
       
+      toast.success("OTP verified successfully");
+      
       // Store OTP for password reset
       setOtp(otpValue);
       
@@ -143,6 +153,7 @@ function Login() {
     } catch (err) {
       console.error("❌ Error verifying OTP:", err);
       setError(err.message || "Invalid OTP. Please try again.");
+      toast.error(err.message || "Invalid OTP. Please try again.");
       throw err; // Re-throw to be handled by the modal
     } finally {
       setLoading(false);
@@ -158,20 +169,11 @@ function Login() {
       const response = await resendOtp(forgotEmail);
       console.log("✅ OTP resent:", response.message);
       
-      // Show success message
-      let alertMessage = response.message;
-      
-      // FOR TESTING: If OTP is included in response (when email fails), show it
-      if (response.otp) {
-        alertMessage += `\n\n⚠️ TESTING MODE - Your OTP: ${response.otp}`;
-        alertMessage += `\n\nNote: Email sending failed. The OTP is shown here for testing only.`;
-      }
-      
-      alert(alertMessage);
+      toast.success(response.message || "OTP resent to your email");
     } catch (err) {
       console.error("❌ Error resending OTP:", err);
       setError(err.message || "Failed to resend OTP. Please try again.");
-      alert(err.message || "Failed to resend OTP. Please try again.");
+      toast.error(err.message || "Failed to resend OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -188,16 +190,19 @@ function Login() {
   const handlePasswordSuccess = async (password, passwordConfirmation) => {
     if (!password || !passwordConfirmation) {
       setError("Please fill in all fields");
+      toast.error("Please fill in all fields");
       return;
     }
 
     if (password !== passwordConfirmation) {
       setError("Passwords do not match");
+      toast.error("Passwords do not match");
       throw new Error("Passwords do not match");
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
+      toast.error("Password must be at least 6 characters");
       throw new Error("Password must be at least 6 characters");
     }
 
@@ -208,8 +213,7 @@ function Login() {
       const response = await resetPassword(forgotEmail, otp, password, passwordConfirmation);
       console.log("✅ Password reset successful:", response.message);
       
-      // Show success message
-      alert(response.message + "\n\nPlease login with your new password.");
+      toast.success(response.message + " Please login with your new password.");
       
       // Close all dialogs and reset state
       setShowNewPasswordDialog(false);
@@ -219,6 +223,7 @@ function Login() {
     } catch (err) {
       console.error("❌ Error resetting password:", err);
       setError(err.message || "Failed to reset password. Please try again.");
+      toast.error(err.message || "Failed to reset password. Please try again.");
       throw err; // Re-throw to be handled by the modal
     } finally {
       setLoading(false);
