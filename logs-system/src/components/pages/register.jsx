@@ -108,7 +108,7 @@ export default function Register() {
 
       console.log(response.data);
 
-      toast.success("Registered successfully!");
+      toast.success("Registered successfully! Redirecting to login...");
 
       setForm({
         student_id: "",

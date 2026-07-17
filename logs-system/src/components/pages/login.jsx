@@ -11,6 +11,7 @@ import ForgotPass from "@/components/modals/forgot-pass";
 import VerifyOtpDialog from "@/components/modals/otp-dialog";
 import CreateNewPasswordDialog from "@/components/modals/new-password";
 import { login, forgotPassword, verifyOtp, resendOtp, resetPassword } from "@/api/authApi";
+import { toast } from "sonner";
 
 function Login() {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ function Login() {
       }
       
       // Show success message
-      alert(`Welcome back, ${response.user.fname}!`);
+      toast.success(`Welcome back, ${response.user.fname}!`);
       
       // Navigate to dashboard
       navigate("/dashboard");
@@ -87,15 +88,7 @@ function Login() {
       console.log("✅ OTP sent:", response.message);
       
       // Show success message
-      let alertMessage = response.message;
-      
-      // FOR TESTING: If OTP is included in response (when email fails), show it
-      if (response.otp) {
-        alertMessage += `\n\n⚠️ TESTING MODE - Your OTP: ${response.otp}`;
-        alertMessage += `\n\nNote: Email sending failed. The OTP is shown here for testing only.`;
-      }
-      
-      alert(alertMessage);
+      toast.success(response.message || "OTP sent to your email");
       
       // Close forgot password dialog and open OTP dialog
       setShowForgotPassword(false);
@@ -103,7 +96,21 @@ function Login() {
     } catch (err) {
       console.error("❌ Error sending OTP:", err);
       setError(err.message || "Failed to send OTP. Please try again.");
-      alert(err.message || "Failed to send OTP. Please try again.");
+      
+      // Show error message with toast
+      if (err.error === 'email_not_found') {
+        toast.error(err.message || "Email not found. Please register first.");
+      } else if (err.error === 'email_send_failed') {
+        toast.error(
+          <div>
+            <p className="font-semibold">Failed to Send Email</p>
+            <p className="text-sm mt-1">{err.message}</p>
+          </div>,
+          { duration: 5000 }
+        );
+      } else {
+        toast.error(err.message || "Failed to send OTP. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -148,19 +155,23 @@ function Login() {
       console.log("✅ OTP resent:", response.message);
       
       // Show success message
-      let alertMessage = response.message;
-      
-      // FOR TESTING: If OTP is included in response (when email fails), show it
-      if (response.otp) {
-        alertMessage += `\n\n⚠️ TESTING MODE - Your OTP: ${response.otp}`;
-        alertMessage += `\n\nNote: Email sending failed. The OTP is shown here for testing only.`;
-      }
-      
-      alert(alertMessage);
+      toast.success(response.message || "OTP resent to your email");
     } catch (err) {
       console.error("❌ Error resending OTP:", err);
       setError(err.message || "Failed to resend OTP. Please try again.");
-      alert(err.message || "Failed to resend OTP. Please try again.");
+      
+      // Show error message with toast
+      if (err.error === 'email_send_failed') {
+        toast.error(
+          <div>
+            <p className="font-semibold">Failed to Send Email</p>
+            <p className="text-sm mt-1">{err.message}</p>
+          </div>,
+          { duration: 5000 }
+        );
+      } else {
+        toast.error(err.message || "Failed to resend OTP. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -198,7 +209,13 @@ function Login() {
       console.log("✅ Password reset successful:", response.message);
       
       // Show success message
-      alert(response.message + "\n\nPlease login with your new password.");
+      toast.success(
+        <div>
+          <p className="font-semibold">Password Reset Successful!</p>
+          <p className="text-sm mt-1">Please login with your new password.</p>
+        </div>,
+        { duration: 4000 }
+      );
       
       // Close all dialogs and reset state
       setShowNewPasswordDialog(false);
