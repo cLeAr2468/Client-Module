@@ -104,6 +104,8 @@ export default function Appointments() {
         return "Completed";
       case "cancelled":
         return "Cancelled";
+      case "rejected":
+        return "Rejected";
       default:
         return "Pending";
     }
@@ -120,6 +122,8 @@ export default function Appointments() {
         return "bg-green-100 text-green-700 hover:bg-green-100";
       case "Cancelled":
         return "bg-gray-100 text-gray-700 hover:bg-gray-100";
+      case "rejected":
+        return "bg-red-100 text-red-800 hover:bg-red-100";
       default:
         return "bg-gray-100 text-gray-700";
     }
