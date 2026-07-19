@@ -95,8 +95,10 @@ export default function Register() {
       return;
     }
 
-    // Validate password length
-    if (form.password.length < 6) {
+    // Validate password requirements
+    const hasLength = form.password.length >= 6;
+    
+    if (!hasLength) {
       toast.error("Password must be at least 6 characters!");
       return;
     }

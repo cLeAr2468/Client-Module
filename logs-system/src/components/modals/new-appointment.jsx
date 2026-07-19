@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar, Clock } from "lucide-react";
 import { createAppointment } from "@/api/appointmentApi";
+import { toast } from "sonner";
 
 export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -98,7 +99,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
       console.log("✅ Appointment created:", response);
 
       // Show success message
-      alert(response.message || "Appointment created successfully!");
+      toast.success(response.message || "Appointment created successfully!");
 
       // Call parent onSubmit if provided
       if (onSubmit) {
@@ -118,6 +119,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
       onOpenChange(false);
     } catch (err) {
       console.error("❌ Error creating appointment:", err);
+      toast.error(err.message || "Failed to create appointment. Please try again.");
       setError(err.message || "Failed to create appointment. Please try again.");
     } finally {
       setLoading(false);

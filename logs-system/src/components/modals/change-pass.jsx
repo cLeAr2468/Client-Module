@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { changePassword } from "@/api/profileApi";
+import { toast } from "sonner";
 
 export function ChangePass({ open = false, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -39,7 +40,10 @@ export function ChangePass({ open = false, onOpenChange, onSubmit }) {
       return;
     }
 
-    if (formData.newPassword.length < 6) {
+    // Validate password requirements
+    const hasLength = formData.newPassword.length >= 6;
+    
+    if (!hasLength) {
       setError("New password must be at least 6 characters.");
       return;
     }
@@ -61,7 +65,7 @@ export function ChangePass({ open = false, onOpenChange, onSubmit }) {
       const response = await changePassword(formData.currentPassword, formData.newPassword);
       
       // Show success message
-      alert(response.message || "Password changed successfully!");
+      toast.success(response.message || "Password changed successfully!");
       
       // Call the onSubmit callback if provided
       onSubmit?.({
@@ -78,6 +82,7 @@ export function ChangePass({ open = false, onOpenChange, onSubmit }) {
       onOpenChange?.(false);
     } catch (err) {
       console.error("Failed to change password:", err);
+      toast.error(err.message || "Failed to change password. Please try again.");
       setError(err.message || "Failed to change password. Please try again.");
     } finally {
       setLoading(false);
