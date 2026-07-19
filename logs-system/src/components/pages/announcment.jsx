@@ -9,6 +9,11 @@ import { toast } from "sonner";
 export default function AnnouncementPage() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Get the API base URL
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "https://logs-server-system-production.up.railway.app/api";
+  // Extract the base URL without /api for storage
+  const STORAGE_BASE_URL = API_BASE_URL.replace('/api', '');
 
   useEffect(() => {
     fetchAnnouncements();
@@ -85,9 +90,12 @@ export default function AnnouncementPage() {
                     {/* Cover Image */}
                     {announcement.cover_image && (
                       <img
-                        src={`http://127.0.0.1:8000/storage/${announcement.cover_image}`}
+                        src={`${STORAGE_BASE_URL}/storage/${announcement.cover_image}`}
                         alt={announcement.title}
                         className="w-full h-40 object-cover rounded-lg mb-3"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
                       />
                     )}
 
@@ -159,9 +167,12 @@ export default function AnnouncementPage() {
                     {/* Cover Image */}
                     {announcement.cover_image && (
                       <img
-                        src={`http://127.0.0.1:8000/storage/${announcement.cover_image}`}
+                        src={`${STORAGE_BASE_URL}/storage/${announcement.cover_image}`}
                         alt={announcement.title}
                         className="w-full h-64 object-cover rounded-lg mb-4"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
                       />
                     )}
 
