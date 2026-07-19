@@ -211,7 +211,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                   Street / House No.
                 </Label>
                 <Input
-                  placeholder="Unit 123 Blk 4"
+                  placeholder="Enter Street / House No."
                   value={formData.street}
                   onChange={(e) => handleInputChange("street", e.target.value)}
                   className="h-10 rounded-lg border-2 text-sm sm:h-11 sm:rounded-xl sm:text-base lg:h-12 lg:text-lg"
@@ -224,7 +224,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                   Barangay
                 </Label>
                 <Input
-                  placeholder="Brgy. Quezon"
+                  placeholder="Enter Barangay"
                   value={formData.barangay}
                   onChange={(e) => handleInputChange("barangay", e.target.value)}
                   className="h-10 rounded-lg border-2 text-sm sm:h-11 sm:rounded-xl sm:text-base lg:h-12 lg:text-lg"
@@ -237,7 +237,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                   City / Municipality
                 </Label>
                 <Input
-                  placeholder="San Jorge"
+                  placeholder="Enter City / Municipality"
                   value={formData.city}
                   onChange={(e) => handleInputChange("city", e.target.value)}
                   className="h-10 rounded-lg border-2 text-sm sm:h-11 sm:rounded-xl sm:text-base lg:h-12 lg:text-lg"
@@ -250,7 +250,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                   Province
                 </Label>
                 <Input
-                  placeholder="Samar"
+                  placeholder="Enter Province"
                   value={formData.province}
                   onChange={(e) => handleInputChange("province", e.target.value)}
                   className="h-10 rounded-lg border-2 text-sm sm:h-11 sm:rounded-xl sm:text-base lg:h-12 lg:text-lg"
