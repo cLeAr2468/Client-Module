@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import BackgroundLayout from "@/components/layout/background-layout";
 import DashboardHeader from "@/components/layout/dashboard-header";
 import { submitFeedback } from "@/api/feedbackApi";
+import { toast } from "sonner";
 
 export default function Feedback() {
   const [rating, setRating] = useState(0);
@@ -47,7 +48,7 @@ export default function Feedback() {
       const response = await submitFeedback(rating, message.trim());
 
       // Show success message
-      alert(response.message || "Feedback submitted successfully!");
+      toast.success(response.message || "Feedback submitted successfully!");
 
       // Reset form
       setRating(0);
@@ -55,8 +56,9 @@ export default function Feedback() {
       setMessage("");
     } catch (err) {
       console.error("Failed to submit feedback:", err);
-      setError(err.message || "Failed to submit feedback. Please try again.");
-      alert(err.message || "Failed to submit feedback. Please try again.");
+      const errorMessage = err.message || "Failed to submit feedback. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

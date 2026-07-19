@@ -24,6 +24,7 @@ import {
 
 import { Pencil, Loader2 } from "lucide-react";
 import { updateProfile } from "@/api/profileApi";
+import { toast } from "sonner";
 
 export default function EditProfileDialog({
   user,
@@ -65,12 +66,13 @@ export default function EditProfileDialog({
         onSave(response.user);
       }
 
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
       setOpen(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
-      setError(error.message || "Failed to update profile");
-      alert(error.message || "Failed to update profile");
+      const errorMessage = error.message || "Failed to update profile";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

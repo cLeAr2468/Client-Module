@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar, Clock } from "lucide-react";
 import { updateAppointment } from "@/api/appointmentApi";
+import { toast } from "sonner";
 
 export default function EditAppointmentDialog({ open, onOpenChange, initialData = null, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -145,7 +146,7 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
       console.log("✅ Appointment updated:", response);
 
       // Show success message
-      alert(response.message || "Appointment updated successfully!");
+      toast.success(response.message || "Appointment updated successfully!");
 
       // Call parent onSubmit if provided
       if (onSubmit) {
@@ -156,7 +157,9 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
       onOpenChange(false);
     } catch (err) {
       console.error("❌ Error updating appointment:", err);
-      setError(err.message || "Failed to update appointment. Please try again.");
+      const errorMessage = err.message || "Failed to update appointment. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

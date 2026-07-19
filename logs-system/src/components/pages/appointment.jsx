@@ -18,6 +18,7 @@ import Pagination from "@/components/ui/pagination";
 import { Plus, Edit, RefreshCw } from "lucide-react";
 import { getUserAppointments, cancelAppointment } from "@/api/appointmentApi";
 import { getUser } from "@/utils/auth";
+import { toast } from "sonner";
 
 export default function Appointments() {
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
@@ -75,12 +76,12 @@ export default function Appointments() {
     try {
       const response = await cancelAppointment(appointmentId);
       console.log("✅ Appointment cancelled:", response);
-      alert(response.message || "Appointment cancelled successfully");
+      toast.success(response.message || "Appointment cancelled successfully");
       // Refresh appointments list
       fetchAppointments();
     } catch (err) {
       console.error("❌ Error cancelling appointment:", err);
-      alert(err.message || "Failed to cancel appointment");
+      toast.error(err.message || "Failed to cancel appointment");
     }
   };
 
