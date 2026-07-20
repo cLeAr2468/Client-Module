@@ -23,7 +23,21 @@ export default function AnnouncementPage() {
     try {
       setLoading(true);
       const response = await getPublishedAnnouncements();
-      setAnnouncements(response.data || []);
+      const fetchedAnnouncements = response.data || [];
+      setAnnouncements(fetchedAnnouncements);
+      
+      // Debug: Log all announcement image paths
+      console.log('=== ANNOUNCEMENT DEBUG INFO ===');
+      console.log('Storage Base URL:', STORAGE_BASE_URL);
+      fetchedAnnouncements.forEach((ann) => {
+        console.log(`
+          ID: ${ann.id}
+          Title: ${ann.title}
+          Cover Image Path: ${ann.cover_image || 'NO IMAGE'}
+          Full Image URL: ${ann.cover_image ? `${STORAGE_BASE_URL}/storage/${ann.cover_image}` : 'N/A'}
+        `);
+      });
+      console.log('=== END DEBUG INFO ===');
     } catch (error) {
       console.error('Error fetching announcements:', error);
       toast.error('Failed to load announcements');
@@ -89,14 +103,30 @@ export default function AnnouncementPage() {
                   <CardContent className="p-4">
                     {/* Cover Image */}
                     {announcement.cover_image && (
-                      <img
-                        src={`${STORAGE_BASE_URL}/storage/${announcement.cover_image}`}
-                        alt={announcement.title}
-                        className="w-full h-40 object-cover rounded-lg mb-3"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
+                      <div className="mb-3">
+                        <img
+                          src={`${STORAGE_BASE_URL}/storage/${announcement.cover_image.trim()}`}
+                          alt={announcement.title}
+                          className="w-full h-40 object-cover rounded-lg"
+                          onError={(e) => {
+                            console.error('Image failed to load:', {
+                              id: announcement.id,
+                              title: announcement.title,
+                              path: announcement.cover_image,
+                              url: `${STORAGE_BASE_URL}/storage/${announcement.cover_image.trim()}`
+                            });
+                            // Hide the image if it fails to load
+                            e.target.parentElement.style.display = 'none';
+                          }}
+                          onLoad={() => {
+                            console.log('✓ Image loaded:', {
+                              id: announcement.id,
+                              title: announcement.title,
+                              url: `${STORAGE_BASE_URL}/storage/${announcement.cover_image.trim()}`
+                            });
+                          }}
+                        />
+                      </div>
                     )}
 
                     {/* Title */}
@@ -166,14 +196,30 @@ export default function AnnouncementPage() {
                   <CardContent className="p-6">
                     {/* Cover Image */}
                     {announcement.cover_image && (
-                      <img
-                        src={`${STORAGE_BASE_URL}/storage/${announcement.cover_image}`}
-                        alt={announcement.title}
-                        className="w-full h-64 object-cover rounded-lg mb-4"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
+                      <div className="mb-4">
+                        <img
+                          src={`${STORAGE_BASE_URL}/storage/${announcement.cover_image.trim()}`}
+                          alt={announcement.title}
+                          className="w-full h-64 object-cover rounded-lg"
+                          onError={(e) => {
+                            console.error('Image failed to load:', {
+                              id: announcement.id,
+                              title: announcement.title,
+                              path: announcement.cover_image,
+                              url: `${STORAGE_BASE_URL}/storage/${announcement.cover_image.trim()}`
+                            });
+                            // Hide the image if it fails to load
+                            e.target.parentElement.style.display = 'none';
+                          }}
+                          onLoad={() => {
+                            console.log('✓ Image loaded:', {
+                              id: announcement.id,
+                              title: announcement.title,
+                              url: `${STORAGE_BASE_URL}/storage/${announcement.cover_image.trim()}`
+                            });
+                          }}
+                        />
+                      </div>
                     )}
 
                     {/* Title */}
