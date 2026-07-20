@@ -420,7 +420,7 @@ function Login() {
         </div>
 
         {/* RIGHT SIDE - Login form */}
-        <div className="flex w-1/2 items-center justify-center bg-gray-100 p-6">
+        <div className="flex w-1/2 items-center justify-center bg-gray-100 p-14">
           <Card className="w-full max-w-md rounded-2xl border border-gray-300 shadow-sm">
             <CardContent className="p-10">
               {/* Header - Desktop */}
