@@ -33,7 +33,7 @@ export const logout = () => {
   localStorage.removeItem('auth_token');
   localStorage.removeItem('user_data');
   localStorage.removeItem('remember_me');
-  window.location.href = '/login';
+  window.location.href = '/';
 };
 
 /**

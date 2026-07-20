@@ -53,7 +53,7 @@ export const login = async (email, password) => {
  */
 export const logout = async (token) => {
   try {
-    const response = await api.post('/logout', {}, {
+    const response = await api.post('/', {}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
