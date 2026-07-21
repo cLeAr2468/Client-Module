@@ -116,13 +116,17 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     setError("");
 
     try {
-      // Include user address in the submission
+      // Include user address in the submission with correct field names for backend
       const appointmentData = {
-        ...formData,
+        purpose: formData.purpose,
         barangay: userAddress.barangay,
         city: userAddress.municipality,
         province: userAddress.province,
+        schedule_date: formData.scheduleDate,  // Changed from scheduleDate to schedule_date
+        time_slot: formData.timeSlot,          // Changed from timeSlot to time_slot
       };
+
+      console.log("Submitting appointment data:", appointmentData); // Debug log
 
       const response = await createAppointment(appointmentData);
       console.log("✅ Appointment created:", response);
