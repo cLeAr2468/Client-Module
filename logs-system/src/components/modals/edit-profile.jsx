@@ -244,6 +244,38 @@ export default function EditProfileDialog({
           </div>
 
           {/* Address */}
+          <div className="space-y-2">
+            <Label>Barangay</Label>
+
+            <Input
+              name="barangay"
+              placeholder="Enter barangay"
+              value={form.barangay || ""}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Municipality</Label>
+
+            <Input
+              name="municipality"
+              placeholder="Enter municipality"
+              value={form.municipality || ""}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Province</Label>
+
+            <Input
+              name="province"
+              placeholder="Enter province"
+              value={form.province || ""}
+              onChange={handleChange}
+            />
+          </div>
 
         </div>
 

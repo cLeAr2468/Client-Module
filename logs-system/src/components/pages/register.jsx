@@ -29,6 +29,9 @@ export default function Register() {
     mname: "",
     lname: "",
     email: "",
+    barangay: "",
+    municipality: "",
+    province: "",
     course: "",
     year_level: "",
     password: "",
@@ -53,6 +56,9 @@ export default function Register() {
         mname: student.mname || "",
         lname: student.lname || "",
         email: student.email || "",
+        barangay: student.barangay || "",
+        municipality: student.municipality || "",
+        province: student.province || "",
         course: student.course || "",
         year_level: student.year_level || "",
       });
@@ -71,6 +77,9 @@ export default function Register() {
         mname: "",
         lname: "",
         email: "",
+        barangay: "",
+        municipality: "",
+        province: "",
         course: "",
         year_level: "",
       });
@@ -118,6 +127,9 @@ export default function Register() {
         mname: "",
         lname: "",
         email: "",
+        barangay: "",
+        municipality: "",
+        province: "",
         course: "",
         year_level: "",
         password: "",
@@ -188,11 +200,11 @@ export default function Register() {
               {/* Middle Name - Mobile */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  Middle Name:
+                  Middle Name (Optional):
                 </label>
                 <Input
                   id="mname"
-                  placeholder="Middle Name"
+                  placeholder="Middle Name (Optional)"
                   className="h-9 border border-gray-300 bg-white text-sm"
                   value={form.mname}
                   onChange={handleChange}
@@ -289,6 +301,45 @@ export default function Register() {
                     onChange={handleChange}
                   />
                 </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  Barangay:
+                </label>
+                <Input
+                  id="barangay"
+                  placeholder="Barangay"
+                  className="h-9 border border-gray-300 bg-white text-sm"
+                  value={form.barangay}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  City/Municipality:
+                </label>
+                <Input
+                  id="municipality"
+                  placeholder="City/Municipality"
+                  className="h-9 border border-gray-300 bg-white text-sm"
+                  value={form.municipality}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  Province:
+                </label>
+                <Input
+                  id="province"
+                  placeholder="Province"
+                  className="h-9 border border-gray-300 bg-white text-sm"
+                  value={form.province}
+                  onChange={handleChange}
+                  required
+                />
               </div>
 
               {/* Password - Mobile */}
@@ -442,11 +493,11 @@ export default function Register() {
 
                   <div>
                     <label className="mb-1.5 block text-sm font-medium">
-                      Middle Name:
+                      Middle Name (Optional):
                     </label>
                     <Input
                       id="mname"
-                      placeholder="Middle Name"
+                      placeholder="Middle Name (Optional)"
                       className="h-10 border border-gray-300 bg-white text-sm"
                       value={form.mname}
                       onChange={handleChange}
@@ -484,6 +535,47 @@ export default function Register() {
                     </div>
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                 <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  Barangay:
+                </label>
+                <Input
+                  id="barangay"
+                  placeholder="Barangay"
+                  className="h-9 border border-gray-300 bg-white text-sm"
+                  value={form.barangay}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+                <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  City/Municipality:
+                </label>
+                <Input
+                  id="municipality"
+                  placeholder="City/Municipality"
+                  className="h-9 border border-gray-300 bg-white text-sm"
+                  value={form.municipality}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  Province:
+                </label>
+                <Input
+                  id="province"
+                  placeholder="Province"
+                  className="h-9 border border-gray-300 bg-white text-sm"
+                  value={form.province}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
                 {/* Course & Email - Desktop */}
                 <div className="grid grid-cols-2 gap-4">

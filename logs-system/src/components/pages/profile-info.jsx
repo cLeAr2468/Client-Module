@@ -160,6 +160,21 @@ export default function ProfileDisplay() {
                                                     label="Email"
                                                     value={user.email}
                                                 />
+                                                <Info
+                                                    icon={<MapPin size={18} />}
+                                                    label="Barangay"
+                                                    value={user.barangay || "Not provided"}
+                                                />
+                                                <Info
+                                                    icon={<MapPin size={18} />}
+                                                    label="Municipality"
+                                                    value={user.municipality || "Not provided"}
+                                                />
+                                                <Info
+                                                    icon={<MapPin size={18} />}
+                                                    label="Province"
+                                                    value={user.province || "Not provided"}
+                                                />
 
                                             </div>
                                         </CardContent>
@@ -225,6 +240,21 @@ export default function ProfileDisplay() {
                                         icon={<Mail size={18} />}
                                         label="Email"
                                         value={user.email}
+                                    />
+                                    <Info
+                                        icon={<MapPin size={18} />}
+                                        label="Barangay"
+                                        value={user.barangay || "Not provided"}
+                                    />
+                                    <Info
+                                        icon={<MapPin size={18} />}
+                                        label="Municipality"
+                                        value={user.municipality || "Not provided"}
+                                    />
+                                    <Info
+                                        icon={<MapPin size={18} />}
+                                        label="Province"
+                                        value={user.province || "Not provided"}
                                     />
         
                                 </div>

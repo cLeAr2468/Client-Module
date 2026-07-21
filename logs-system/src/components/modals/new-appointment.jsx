@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,24 +15,61 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, MapPin } from "lucide-react";
 import { createAppointment } from "@/api/appointmentApi";
+import { getProfile } from "@/api/profileApi";
+import { getUser } from "@/utils/auth";
 import { toast } from "sonner";
 
 export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
     scheduleDate: "",
     purpose: "",
-    street: "",
-    barangay: "",
-    city: "",
-    province: "",
     timeSlot: "",
+  });
+
+  const [userAddress, setUserAddress] = useState({
+    barangay: "",
+    municipality: "",
+    province: "",
   });
 
   const [selectedPeriod, setSelectedPeriod] = useState("morning");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Fetch user address data when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchUserAddress();
+    }
+  }, [open]);
+
+  const fetchUserAddress = async () => {
+    try {
+      // First try to get from localStorage
+      const localUser = getUser();
+      if (localUser && localUser.barangay && localUser.municipality && localUser.province) {
+        setUserAddress({
+          barangay: localUser.barangay || "",
+          municipality: localUser.municipality || "",
+          province: localUser.province || "",
+        });
+      } else {
+        // If not in localStorage or incomplete, fetch from backend
+        const response = await getProfile();
+        const user = response.user;
+        setUserAddress({
+          barangay: user.barangay || "",
+          municipality: user.municipality || "",
+          province: user.province || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching user address:", error);
+      toast.error("Failed to load user address information");
+    }
+  };
 
   // Get today's date in YYYY-MM-DD format for min attribute
   const today = new Date().toISOString().split('T')[0];
@@ -70,22 +107,6 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
       setError("Please select a purpose for appointment");
       return;
     }
-    if (!formData.street) {
-      setError("Please enter your street/house number");
-      return;
-    }
-    if (!formData.barangay) {
-      setError("Please enter your barangay");
-      return;
-    }
-    if (!formData.city) {
-      setError("Please enter your city/municipality");
-      return;
-    }
-    if (!formData.province) {
-      setError("Please enter your province");
-      return;
-    }
     if (!formData.timeSlot) {
       setError("Please select a time slot");
       return;
@@ -95,7 +116,15 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     setError("");
 
     try {
-      const response = await createAppointment(formData);
+      // Include user address in the submission
+      const appointmentData = {
+        ...formData,
+        barangay: userAddress.barangay,
+        city: userAddress.municipality,
+        province: userAddress.province,
+      };
+
+      const response = await createAppointment(appointmentData);
       console.log("✅ Appointment created:", response);
 
       // Show success message
@@ -110,10 +139,6 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
       setFormData({
         scheduleDate: "",
         purpose: "",
-        street: "",
-        barangay: "",
-        city: "",
-        province: "",
         timeSlot: "",
       });
       onOpenChange(false);
@@ -130,10 +155,6 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     setFormData({
       scheduleDate: "",
       purpose: "",
-      street: "",
-      barangay: "",
-      city: "",
-      province: "",
       timeSlot: "",
     });
     setError("");
@@ -200,65 +221,33 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
             </div>
           </div>
 
-          {/* Residential Address */}
-          <div className="space-y-3 sm:space-y-4">
-            <h3 className="text-base font-semibold text-slate-800 sm:text-lg lg:text-xl">
-              Residential Address
-            </h3>
+          {/* Residential Address - Display Only */}
+          <div className="space-y-3 sm:space-y-4 rounded-lg bg-gray-50 p-4 border-2 border-gray-200">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-green-700" />
+              <h3 className="text-base font-semibold text-slate-800 sm:text-lg lg:text-xl">
+                Residential Address
+              </h3>
+            </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:gap-6">
-              {/* Street / House No. */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-slate-600 sm:text-sm lg:text-base">
-                  Street / House No.
-                </Label>
-                <Input
-                  placeholder="Enter Street / House No."
-                  value={formData.street}
-                  onChange={(e) => handleInputChange("street", e.target.value)}
-                  className="h-10 rounded-lg border-2 text-sm sm:h-11 sm:rounded-xl sm:text-base lg:h-12 lg:text-lg"
-                />
+            <div className="space-y-2 text-sm sm:text-base">
+              <div className="flex">
+                <span className="font-medium text-slate-600 w-32">Barangay:</span>
+                <span className="text-slate-800">{userAddress.barangay || "Not provided"}</span>
               </div>
-
-              {/* Barangay */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-slate-600 sm:text-sm lg:text-base">
-                  Barangay
-                </Label>
-                <Input
-                  placeholder="Enter Barangay"
-                  value={formData.barangay}
-                  onChange={(e) => handleInputChange("barangay", e.target.value)}
-                  className="h-10 rounded-lg border-2 text-sm sm:h-11 sm:rounded-xl sm:text-base lg:h-12 lg:text-lg"
-                />
+              <div className="flex">
+                <span className="font-medium text-slate-600 w-32">Municipality:</span>
+                <span className="text-slate-800">{userAddress.municipality || "Not provided"}</span>
               </div>
-
-              {/* City / Municipality */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-slate-600 sm:text-sm lg:text-base">
-                  City / Municipality
-                </Label>
-                <Input
-                  placeholder="Enter City / Municipality"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange("city", e.target.value)}
-                  className="h-10 rounded-lg border-2 text-sm sm:h-11 sm:rounded-xl sm:text-base lg:h-12 lg:text-lg"
-                />
-              </div>
-
-              {/* Province */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-slate-600 sm:text-sm lg:text-base">
-                  Province
-                </Label>
-                <Input
-                  placeholder="Enter Province"
-                  value={formData.province}
-                  onChange={(e) => handleInputChange("province", e.target.value)}
-                  className="h-10 rounded-lg border-2 text-sm sm:h-11 sm:rounded-xl sm:text-base lg:h-12 lg:text-lg"
-                />
+              <div className="flex">
+                <span className="font-medium text-slate-600 w-32">Province:</span>
+                <span className="text-slate-800">{userAddress.province || "Not provided"}</span>
               </div>
             </div>
+
+            <p className="text-xs text-gray-500 italic sm:text-sm">
+              This address is from your profile. To update it, please contact the administrator.
+            </p>
           </div>
 
           {/* Time Slot Selection */}
