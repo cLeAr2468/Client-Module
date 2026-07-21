@@ -51,12 +51,11 @@ export const createAppointment = async (appointmentData) => {
   try {
     const response = await api.post('/appointments', {
       purpose: appointmentData.purpose,
-      street_house_no: appointmentData.street,
-      brgy: appointmentData.barangay,
-      municipality: appointmentData.city,
+      barangay: appointmentData.barangay,
+      city: appointmentData.city,
       province: appointmentData.province,
-      schedule_date: appointmentData.scheduleDate,
-      time_slot: appointmentData.timeSlot,
+      schedule_date: appointmentData.schedule_date,
+      time_slot: appointmentData.time_slot,
     });
     return response.data;
   } catch (error) {
