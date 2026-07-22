@@ -18,6 +18,7 @@ import {
 import { Calendar, Clock, MapPin } from "lucide-react";
 import { createAppointment } from "@/api/appointmentApi";
 import { getProfile } from "@/api/profileApi";
+import { getAllPurposes } from "@/api/purposeApi";
 import { getUser } from "@/utils/auth";
 import { toast } from "sonner";
 
@@ -34,6 +35,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     province: "",
   });
 
+  const [purposes, setPurposes] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState("morning");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,6 +44,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   useEffect(() => {
     if (open) {
       fetchUserAddress();
+      fetchPurposes();
     }
   }, [open]);
 
@@ -68,6 +71,16 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     } catch (error) {
       console.error("Error fetching user address:", error);
       toast.error("Failed to load user address information");
+    }
+  };
+
+  const fetchPurposes = async () => {
+    try {
+      const response = await getAllPurposes();
+      setPurposes(response.purposes || []);
+    } catch (error) {
+      console.error("Error fetching purposes:", error);
+      toast.error("Failed to load appointment purposes");
     }
   };
 
@@ -214,12 +227,17 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                   <SelectValue placeholder="Select purpose" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ID Validation">ID Validation</SelectItem>
-                  <SelectItem value="scholarship">Scholarship</SelectItem>
-                  <SelectItem value="Good Moral">Good Moral</SelectItem>
-                  <SelectItem value="Assistance in Scholarship">Assistance in Scholarship</SelectItem>
-                  <SelectItem value="ID Request Form">ID Request Form</SelectItem>
-                  <SelectItem value="Student Clearance">Student Clearance</SelectItem>
+                  {purposes.length === 0 ? (
+                    <SelectItem value="" disabled>
+                      No purposes available
+                    </SelectItem>
+                  ) : (
+                    purposes.map((purpose) => (
+                      <SelectItem key={purpose.id} value={purpose.name}>
+                        {purpose.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
