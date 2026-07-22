@@ -88,6 +88,9 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const today = new Date().toISOString().split('T')[0];
 
   const morningSlots = [
+      
+    "08:00 AM",
+    "08:30 AM",
     "09:00 AM",
     "09:30 AM",
     "10:00 AM",
@@ -103,6 +106,8 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     "02:30 PM",
     "03:00 PM",
     "03:30 PM",
+    "04:00 PM",
+    "04:30 PM",
   ];
 
   const handleInputChange = (field, value) => {
