@@ -399,7 +399,7 @@ function Login() {
       </div>
 
       {/* DESKTOP VIEW - Split screen layout */}
-      <div className="hidden min-h-screen lg:flex lg:flex-row">
+      <div className="hidden w-full min-h-screen lg:flex lg:flex-row">
         {/* LEFT SIDE - Background with logo */}
         <div className="relative flex w-1/2">
           <img
@@ -420,7 +420,7 @@ function Login() {
         </div>
 
         {/* RIGHT SIDE - Login form */}
-        <div className="flex w-1/2 items-center justify-center bg-gray-100 p-14">
+        <div className="flex w-1/2 items-center justify-center bg-gray-100">
           <Card className="w-full max-w-lg rounded-2xl border border-gray-300 shadow-sm">
             <CardContent className="p-10">
               {/* Header - Desktop */}

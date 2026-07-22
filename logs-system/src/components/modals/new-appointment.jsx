@@ -284,7 +284,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
             </h3>
 
             {/* Period Selector */}
-            <div className="flex gap-2 sm:gap-4 lg:gap-6">
+            <div className="flex gap-2 sm:gap-4 lg:gap-4">
               <button
                 type="button"
                 onClick={() => setSelectedPeriod("morning")}
@@ -310,7 +310,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
             </div>
 
             {/* Time Slots Grid */}
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-6 lg:gap-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:gap-4">
               {(selectedPeriod === "morning" ? morningSlots : afternoonSlots).map(
                 (slot) => (
                   <button
