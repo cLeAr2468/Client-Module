@@ -7,18 +7,23 @@ import Appointment from "@/components/pages/appointment";
 import HistoryTransactions from "@/components/pages/transact-history";
 import ProfileDisplay from "@/components/pages/profile-info";
 import Feedback from "@/components/pages/feedback";
+import ProtectedRoute from "./ProtectedRoute";
+
 function Reroutes() {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/" element={<AnnouncementPage />} />
-      <Route path="/Dashboard" element={<Dashboard />} />
       <Route path="/Announcement" element={<AnnouncementPage />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/Login" element={<Login />} />
-      <Route path="/Appointments" element={<Appointment />} />
-      <Route path="/Transactions" element={<HistoryTransactions />} />
-      <Route path="/Profile" element={<ProfileDisplay />} />
-      <Route path="/Feedback" element={<Feedback />} />
+      
+      {/* Protected Routes - Require Authentication */}
+      <Route path="/Dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/Appointments" element={<ProtectedRoute><Appointment /></ProtectedRoute>} />
+      <Route path="/Transactions" element={<ProtectedRoute><HistoryTransactions /></ProtectedRoute>} />
+      <Route path="/Profile" element={<ProtectedRoute><ProfileDisplay /></ProtectedRoute>} />
+      <Route path="/Feedback" element={<ProtectedRoute><Feedback /></ProtectedRoute>} />
     </Routes>
   );
 }
