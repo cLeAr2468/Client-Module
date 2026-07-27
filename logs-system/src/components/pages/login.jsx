@@ -30,26 +30,14 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loginError, setLoginError] = useState("");
 
-  // Redirect if already logged in
+  // Check authentication immediately on mount
   useEffect(() => {
     const token = localStorage.getItem('token') || localStorage.getItem('authToken');
     if (token) {
-      navigate('/dashboard', { replace: true });
+      // Redirect immediately without rendering login
+      window.location.replace('/dashboard');
     }
-  }, [navigate]);
-
-  // Block navigation back to login if already authenticated
-  useEffect(() => {
-    const handlePopState = () => {
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-      if (token) {
-        navigate('/dashboard', { replace: true });
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [navigate]);
+  }, []);
 
   // Handle Login
   const handleLogin = async (e) => {
