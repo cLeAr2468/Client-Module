@@ -12,6 +12,7 @@ import VerifyOtpDialog from "@/components/modals/otp-dialog";
 import CreateNewPasswordDialog from "@/components/modals/new-password";
 import { login, forgotPassword, verifyOtp, resendOtp, resetPassword } from "@/api/authApi";
 import { toast } from "sonner";
+import { setSession, isSessionActive } from "@/utils/session";
 
 function Login() {
   const navigate = useNavigate();
@@ -32,8 +33,7 @@ function Login() {
 
   // Check authentication immediately on mount
   useEffect(() => {
-    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-    if (token) {
+    if (isSessionActive()) {
       // Redirect immediately without rendering login
       window.location.replace('/dashboard');
     }
@@ -60,11 +60,10 @@ function Login() {
       const response = await login(loginEmail, loginPassword);
       console.log("✅ Login successful:", response);
       
-      // Store token and user data in localStorage
-      localStorage.setItem("auth_token", response.token);
-      localStorage.setItem("user_data", JSON.stringify(response.user));
+      // Store using session
+      setSession(response.token, response.user);
       
-      // If remember me is checked, store credentials (optional - for better security, only store token)
+      // If remember me is checked
       if (rememberMe) {
         localStorage.setItem("remember_me", "true");
       }

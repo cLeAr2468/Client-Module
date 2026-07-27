@@ -1,9 +1,9 @@
 import { Navigate } from 'react-router-dom';
+import { isSessionActive } from '@/utils/session';
 
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = () => {
-    const token = localStorage.getItem('auth_token');
-    return !!token; // Returns true if token exists, false otherwise
+    return isSessionActive();
   };
 
   if (!isAuthenticated()) {
