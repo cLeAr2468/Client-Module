@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import Image1 from "@/assets/login.png";
 import Image2 from "@/assets/nwssu 1.png";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import ForgotPass from "@/components/modals/forgot-pass";
@@ -29,6 +29,14 @@ function Login() {
   const [loginPassword, setLoginPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loginError, setLoginError] = useState("");
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    if (token) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
 
   // Handle Login
   const handleLogin = async (e) => {
