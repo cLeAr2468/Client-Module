@@ -27,12 +27,15 @@ export const getToken = () => {
 };
 
 /**
- * Logout user - clears all auth data and redirects to login
+ * Logout user - clears all auth data and redirects to announcement page
  */
 export const logout = () => {
   localStorage.removeItem('auth_token');
   localStorage.removeItem('user_data');
   localStorage.removeItem('remember_me');
+  localStorage.removeItem('token');
+  localStorage.removeItem('authToken');
+  localStorage.clear();
   window.location.href = '/';
 };
 
