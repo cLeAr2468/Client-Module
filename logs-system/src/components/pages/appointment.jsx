@@ -15,10 +15,18 @@ import DashboardHeader from "@/components/layout/dashboard-header";
 import NewAppointmentDialog from "@/components/modals/new-appointment";
 import EditAppointmentDialog from "@/components/modals/edit-appoint";
 import Pagination from "@/components/ui/pagination";
-import { Plus, Edit, RefreshCw } from "lucide-react";
+import { Plus, Edit, RefreshCw, Filter } from "lucide-react";
 import { getUserAppointments, cancelAppointment } from "@/api/appointmentApi";
+import { getAllPurposes } from "@/api/purposeApi";
 import { getUser } from "@/utils/auth";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Appointments() {
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
@@ -27,10 +35,12 @@ export default function Appointments() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState("All");
+  const [filter, setFilter] = useState("Pending");
   const [searchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [purposeFilter, setPurposeFilter] = useState("All Purposes");
+  const [purposes, setPurposes] = useState([]);
 
   // Fetch appointments
   const fetchAppointments = async () => {
@@ -52,7 +62,17 @@ export default function Appointments() {
   // Fetch on component mount
   useEffect(() => {
     fetchAppointments();
+    fetchPurposes();
   }, []);
+
+  const fetchPurposes = async () => {
+    try {
+      const response = await getAllPurposes();
+      setPurposes(response.purposes || []);
+    } catch (err) {
+      console.error("❌ Error fetching purposes:", err);
+    }
+  };
 
   const handleNewAppointment = (appointmentData) => {
     console.log("New appointment created:", appointmentData);
@@ -147,7 +167,16 @@ export default function Appointments() {
   const filteredTransactions = transactions.filter((item) => {
     // Map backend status to display status
     const displayStatus = getDisplayStatus(item.status);
-    const statusMatch = filter === "All" || displayStatus === filter;
+    
+    // Only show Pending, Approved, and Completed transactions
+    if (displayStatus !== "Pending" && displayStatus !== "Approved" && displayStatus !== "Completed") {
+      return false;
+    }
+    
+    const statusMatch = displayStatus === filter;
+    
+    // Purpose filter
+    const purposeMatch = purposeFilter === "All Purposes" || item.purpose === purposeFilter;
     
     const searchMatch =
       searchQuery === "" ||
@@ -156,7 +185,7 @@ export default function Appointments() {
       (item.brgy && item.brgy.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.municipality && item.municipality.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    return statusMatch && searchMatch;
+    return statusMatch && searchMatch && purposeMatch;
   });
 
   // Pagination logic
@@ -168,7 +197,7 @@ export default function Appointments() {
   // Reset to page 1 when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filter]);
+  }, [filter, purposeFilter]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -176,7 +205,7 @@ export default function Appointments() {
   };
 
   const renderFilterButtons = () =>
-    ["All", "Pending", "Approved", "Completed"].map((status) => (
+    ["Pending", "Approved", "Completed"].map((status) => (
       <Button
         key={status}
         variant={filter === status ? "default" : "outline"}
@@ -208,7 +237,27 @@ export default function Appointments() {
               )}
 
               <div className="flex gap-4 mb-6 justify-between">
-                <div className="flex gap-2 flex-wrap">{renderFilterButtons()}</div>
+                <div className="flex gap-2 flex-wrap items-center">
+                  {renderFilterButtons()}
+                  
+                  {/* Purpose Filter Dropdown */}
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-gray-500" />
+                    <Select value={purposeFilter} onValueChange={setPurposeFilter}>
+                      <SelectTrigger className="w-[200px] h-10">
+                        <SelectValue placeholder="Filter by purpose" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All Purposes">All Purposes</SelectItem>
+                        {purposes.map((purpose) => (
+                          <SelectItem key={purpose.id} value={purpose.name}>
+                            {purpose.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <Button
                     onClick={fetchAppointments}
@@ -249,7 +298,9 @@ export default function Appointments() {
                             <TableHead>Schedule Date</TableHead>
                             <TableHead>Time Slot</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            {filter !== "Completed" && (
+                              <TableHead className="text-right">Actions</TableHead>
+                            )}
                           </TableRow>
                         </TableHeader>
 
@@ -269,44 +320,46 @@ export default function Appointments() {
                                     {getDisplayStatus(item.status)}
                                   </Badge>
                                 </TableCell>
-                                <TableCell className="text-right">
-                                  <div className="flex justify-end items-center gap-2">
-                                    {item.status === "pending" && (
-                                      <>
-                                        <Button
-                                          onClick={() => {
-                                            setSelectedAppointment(item);
-                                            setIsEditAppointmentOpen(true);
-                                          }}
-                                          aria-label="Edit appointment"
-                                          className="h-8 w-8 p-0 rounded-full bg-white hover:bg-[#15592F] hover:text-white flex text-[#15592F] items-center justify-center"
-                                        >
-                                          <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button 
-                                          variant="destructive" 
-                                          className="h-9 px-3" 
-                                          title="Cancel"
-                                          onClick={() => handleCancelAppointment(item.id)}
-                                        >
-                                          Cancel
-                                        </Button>
-                                      </>
+                                {filter !== "Completed" && (
+                                  <TableCell className="text-right">
+                                    {(item.status === "pending" || item.status === "approved") && (
+                                      <div className="flex justify-end items-center gap-2">
+                                        {item.status === "pending" && (
+                                          <>
+                                            <Button
+                                              onClick={() => {
+                                                setSelectedAppointment(item);
+                                                setIsEditAppointmentOpen(true);
+                                              }}
+                                              aria-label="Edit appointment"
+                                              className="h-8 w-8 p-0 rounded-full bg-white hover:bg-[#15592F] hover:text-white flex text-[#15592F] items-center justify-center"
+                                            >
+                                              <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button 
+                                              variant="destructive" 
+                                              className="h-9 px-3" 
+                                              title="Cancel"
+                                              onClick={() => handleCancelAppointment(item.id)}
+                                            >
+                                              Cancel
+                                            </Button>
+                                          </>
+                                        )}
+                                        {item.status === "approved" && (
+                                          <span className="text-sm text-gray-500">In Progress</span>
+                                        )}
+                                      </div>
                                     )}
-                                    {item.status !== "pending" && (
-                                      <span className="text-sm text-gray-500">-</span>
-                                    )}
-                                  </div>
-                                </TableCell>
+                                  </TableCell>
+                                )}
                               </TableRow>
                             ))
                           ) : (
                             <TableRow>
-                              <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                              <TableCell colSpan={filter !== "Completed" ? 7 : 6} className="text-center py-8 text-gray-500">
                                 {searchQuery 
                                   ? `No transactions found matching "${searchQuery}" in ${filter} status.` 
-                                  : filter === "All"
-                                  ? "No appointments found. Create your first appointment!"
                                   : `No ${filter} appointments found.`
                                 }
                               </TableCell>
@@ -341,6 +394,24 @@ export default function Appointments() {
                 )}
                 
                 <div className="flex gap-2 flex-wrap">{renderFilterButtons()}</div>
+                
+                {/* Purpose Filter Dropdown for Mobile */}
+                <div className="flex items-center gap-2 w-full">
+                  <Filter className="h-4 w-4 text-white" />
+                  <Select value={purposeFilter} onValueChange={setPurposeFilter}>
+                    <SelectTrigger className="flex-1 h-10 bg-white">
+                      <SelectValue placeholder="Filter by purpose" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All Purposes">All Purposes</SelectItem>
+                      {purposes.map((purpose) => (
+                        <SelectItem key={purpose.id} value={purpose.name}>
+                          {purpose.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 
                 <div className="flex gap-2 w-full">
                   <Button
@@ -438,16 +509,21 @@ export default function Appointments() {
                               </Button>
                             </div>
                           )}
+                          
+                          {item.status === "approved" && (
+                            <div className="flex justify-center mt-4">
+                              <span className="text-sm text-blue-600 font-medium">In Progress</span>
+                            </div>
+                          )}
+                          
+                          {/* No action section for completed status */}
                         </CardContent>
                       </Card>
                     ))
                   ) : (
                     <Card>
                       <CardContent className="py-10 text-center text-gray-500">
-                        {filter === "All" 
-                          ? "No appointments found. Create your first appointment!" 
-                          : `No ${filter} appointments found.`
-                        }
+                        {`No ${filter} appointments found.`}
                       </CardContent>
                     </Card>
                   )}
