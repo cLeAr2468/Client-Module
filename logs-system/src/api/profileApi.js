@@ -31,19 +31,15 @@ export const updateProfile = async (profileData) => {
 
 /**
  * Change user's password
- * @param {string} currentPassword - Current password
- * @param {string} newPassword - New password
+ * @param {Object} passwordData - Password change data
  * @returns {Promise} API response
  */
-export const changePassword = async (currentPassword, newPassword) => {
+export const changePassword = async (passwordData) => {
   try {
-    const response = await api.put('/change-password', {
-      current_password: currentPassword,
-      new_password: newPassword,
-    });
+    const response = await api.put('/change-password', passwordData);
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: 'Failed to change password' };
+    throw error.response?.data || error;
   }
 };
 

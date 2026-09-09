@@ -18,6 +18,7 @@ import Pagination from "@/components/ui/pagination";
 import { Plus, Edit, RefreshCw, Filter } from "lucide-react";
 import { getUserAppointments, cancelAppointment } from "@/api/appointmentApi";
 import { getAllPurposes } from "@/api/purposeApi";
+import { ActivityLogger } from "@/api/activityLogApi";
 import { getUser } from "@/utils/auth";
 import { toast } from "sonner";
 import {
@@ -63,6 +64,8 @@ export default function Appointments() {
   useEffect(() => {
     fetchAppointments();
     fetchPurposes();
+    // Log page view
+    ActivityLogger.appointmentViewed();
   }, []);
 
   const fetchPurposes = async () => {
@@ -76,12 +79,16 @@ export default function Appointments() {
 
   const handleNewAppointment = (appointmentData) => {
     console.log("New appointment created:", appointmentData);
+    // Log appointment creation
+    ActivityLogger.appointmentCreated(appointmentData);
     // Refresh appointments list
     fetchAppointments();
   };
 
   const handleEditAppointment = (updatedData) => {
     console.log("Edited appointment:", updatedData);
+    // Log appointment update
+    ActivityLogger.appointmentUpdated(updatedData.id, updatedData);
     setIsEditAppointmentOpen(false);
     setSelectedAppointment(null);
     // Refresh appointments list
@@ -97,6 +104,8 @@ export default function Appointments() {
       const response = await cancelAppointment(appointmentId);
       console.log("✅ Appointment cancelled:", response);
       toast.success(response.message || "Appointment cancelled successfully");
+      // Log appointment cancellation
+      ActivityLogger.appointmentCancelled(appointmentId);
       // Refresh appointments list
       fetchAppointments();
     } catch (err) {

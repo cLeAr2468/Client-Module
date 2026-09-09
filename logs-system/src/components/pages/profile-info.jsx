@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import EditProfileDialog from "@/components/modals/edit-profile";
+import ChangePasswordDialog from "@/components/modals/change-password";
 
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -25,6 +26,7 @@ import {
     User,
     School,
     Loader2,
+    Lock,
 } from "lucide-react";
 
 import { getProfile } from "@/api/profileApi";
@@ -33,6 +35,7 @@ export default function ProfileDisplay() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showChangePassword, setShowChangePassword] = useState(false);
 
     // Fetch user profile on component mount
     useEffect(() => {
@@ -123,10 +126,20 @@ export default function ProfileDisplay() {
 
                                     <Badge className="mt-3 bg-green-100 text-green-700">{user.status}</Badge>
 
-                                    <EditProfileDialog
-                                        user={user}
-                                        onSave={setUser}
+                                    <div className="mt-4 w-full space-y-2">
+                                        <EditProfileDialog
+                                            user={user}
+                                            onSave={setUser}
                                         />
+                                        
+                                        <button
+                                            onClick={() => setShowChangePassword(true)}
+                                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#15592F] hover:bg-[#104624] text-white rounded-lg transition-colors"
+                                        >
+                                            <Lock className="w-4 h-4" />
+                                            Change Password
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* RIGHT */}
@@ -210,10 +223,20 @@ export default function ProfileDisplay() {
 
                                 <Badge className="mt-3 bg-green-100 text-green-700">{user.status}</Badge>
 
+                                <div className="mt-4 w-full space-y-2">
                                     <EditProfileDialog
-                                         user={user}
+                                        user={user}
                                         onSave={setUser}
-                                        />
+                                    />
+                                    
+                                    <button
+                                        onClick={() => setShowChangePassword(true)}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#15592F] hover:bg-[#104624] text-white rounded-lg transition-colors"
+                                    >
+                                        <Lock className="w-4 h-4" />
+                                        Change Password
+                                    </button>
+                                </div>
 
                                 <Separator className="my-6" />
 
@@ -263,6 +286,12 @@ export default function ProfileDisplay() {
                     </Card>
                 </div>
             </div>
+            
+            {/* Change Password Dialog */}
+            <ChangePasswordDialog
+                open={showChangePassword}
+                onOpenChange={setShowChangePassword}
+            />
         </BackgroundLayout>
     );
 }

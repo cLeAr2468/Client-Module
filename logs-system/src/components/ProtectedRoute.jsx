@@ -1,23 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { isAuthenticated } from '@/utils/auth';
 
-/**
- * Protected Route Component
- * 
- * Wraps components that require authentication.
- * Redirects to login if user is not authenticated.
- * Saves the attempted URL to redirect back after login.
- * 
- * Usage:
- * <Route 
- *   path="/dashboard" 
- *   element={
- *     <ProtectedRoute>
- *       <Dashboard />
- *     </ProtectedRoute>
- *   } 
- * />
- */
+
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();
   

@@ -15,12 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin, Loader2 } from "lucide-react";
 import { createAppointment } from "@/api/appointmentApi";
 import { getProfile } from "@/api/profileApi";
 import { getAllPurposes } from "@/api/purposeApi";
 import { getUser } from "@/utils/auth";
 import { toast } from "sonner";
+import { showErrorToast, getErrorMessage } from "@/utils/errorHandler";
 
 export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -39,6 +40,10 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const [selectedPeriod, setSelectedPeriod] = useState("morning");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [availableSlots, setAvailableSlots] = useState({ morning: [], afternoon: [] });
+  const [fullSlots, setFullSlots] = useState([]);
+  const [slotDetails, setSlotDetails] = useState({});
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   // Fetch user address data when dialog opens
   useEffect(() => {
@@ -47,6 +52,13 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
       fetchPurposes();
     }
   }, [open]);
+
+  // Fetch available slots when date changes
+  useEffect(() => {
+    if (formData.scheduleDate) {
+      fetchAvailableSlots();
+    }
+  }, [formData.scheduleDate]);
 
   const fetchUserAddress = async () => {
     try {
@@ -84,6 +96,62 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     }
   };
 
+  const fetchAvailableSlots = async () => {
+    setLoadingSlots(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      
+      const url = `${import.meta.env.VITE_API_URL}/appointments/available-slots?date=${formData.scheduleDate}`;
+      console.log('🔍 Fetching slots from:', url);
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('📡 Response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📊 Slot data received:', data);
+        console.log('🔴 Full slots:', data.full_slots);
+        console.log('✅ Available slots:', data.available_slots);
+        console.log('📈 Slot details:', data.slot_details);
+        
+        setAvailableSlots(data.available_slots || { morning: [], afternoon: [] });
+        setFullSlots(data.full_slots || []);
+        setSlotDetails(data.slot_details || {});
+        
+        // Clear selected time slot if it's now full
+        if (formData.timeSlot && data.full_slots?.includes(formData.timeSlot)) {
+          setFormData(prev => ({ ...prev, timeSlot: '' }));
+          toast.warning("Selected time slot is now full. Please choose another slot.");
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to fetch slots:', response.status, errorData);
+        toast.error('Failed to fetch available time slots');
+      }
+    } catch (error) {
+      console.error('💥 Error fetching available slots:', error);
+      toast.error('Failed to load available time slots');
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  // Check if a time slot is available
+  const isSlotAvailable = (timeSlot) => {
+    return !fullSlots.includes(timeSlot);
+  };
+
+  // Get slot availability info
+  const getSlotInfo = (timeSlot) => {
+    return slotDetails[timeSlot] || { total: 5, booked: 0, available: 5 };
+  };
+
   // Get today's date in YYYY-MM-DD format for min attribute
   const today = new Date().toISOString().split('T')[0];
 
@@ -119,14 +187,28 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     // Validate all required fields
     if (!formData.scheduleDate) {
       setError("Please select a schedule date");
+      toast.error("Please select a schedule date");
       return;
     }
     if (!formData.purpose) {
       setError("Please select a purpose for appointment");
+      toast.error("Please select a purpose for appointment");
       return;
     }
     if (!formData.timeSlot) {
       setError("Please select a time slot");
+      toast.error("Please select a time slot");
+      return;
+    }
+
+    // Validate date is not in the past
+    const selectedDate = new Date(formData.scheduleDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      setError("Cannot schedule appointments in the past");
+      toast.error("Cannot schedule appointments in the past");
       return;
     }
 
@@ -140,17 +222,23 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
         barangay: userAddress.barangay,
         city: userAddress.municipality,
         province: userAddress.province,
-        schedule_date: formData.scheduleDate,  // Changed from scheduleDate to schedule_date
-        time_slot: formData.timeSlot,          // Changed from timeSlot to time_slot
+        schedule_date: formData.scheduleDate,
+        time_slot: formData.timeSlot,
       };
 
-      console.log("Submitting appointment data:", appointmentData); // Debug log
+      console.log("Submitting appointment data:", appointmentData);
 
       const response = await createAppointment(appointmentData);
       console.log("✅ Appointment created:", response);
 
       // Show success message
-      toast.success(response.message || "Appointment created successfully!");
+      toast.success(
+        <div>
+          <p className="font-semibold">✅ Appointment Created!</p>
+          <p className="text-sm mt-1">Your appointment request has been submitted successfully.</p>
+        </div>,
+        { duration: 5000 }
+      );
 
       // Call parent onSubmit if provided
       if (onSubmit) {
@@ -163,11 +251,29 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
         purpose: "",
         timeSlot: "",
       });
+      setAvailableSlots({ morning: [], afternoon: [] });
+      setFullSlots([]);
+      setSlotDetails({});
       onOpenChange(false);
     } catch (err) {
       console.error("❌ Error creating appointment:", err);
-      toast.error(err.message || "Failed to create appointment. Please try again.");
-      setError(err.message || "Failed to create appointment. Please try again.");
+      
+      // Handle 409 conflict errors specially (duplicate appointment)
+      if (err.response?.status === 409) {
+        const errorMsg = getErrorMessage(err);
+        setError(errorMsg);
+        toast.error(
+          <div>
+            <p className="font-semibold">⚠️ Appointment Conflict</p>
+            <p className="text-sm mt-1">{errorMsg}</p>
+          </div>,
+          { duration: 7000 }
+        );
+      } else {
+        const errorMsg = getErrorMessage(err);
+        setError(errorMsg);
+        showErrorToast(err, "Failed to create appointment");
+      }
     } finally {
       setLoading(false);
     }
@@ -279,9 +385,17 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
 
           {/* Time Slot Selection */}
           <div className="space-y-3 sm:space-y-4">
-            <h3 className="text-base font-semibold text-slate-800 sm:text-lg lg:text-xl">
-              Select Time Slot
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-800 sm:text-lg lg:text-xl">
+                Select Time Slot
+              </h3>
+              {loadingSlots && (
+                <span className="text-xs text-gray-500 flex items-center gap-1 sm:text-sm">
+                  <Loader2 className="h-3 w-3 animate-spin sm:h-4 sm:w-4" />
+                  Loading slots...
+                </span>
+              )}
+            </div>
 
             {/* Period Selector */}
             <div className="flex gap-2 sm:gap-4 lg:gap-4">
@@ -312,19 +426,40 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
             {/* Time Slots Grid */}
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:gap-4">
               {(selectedPeriod === "morning" ? morningSlots : afternoonSlots).map(
-                (slot) => (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => handleInputChange("timeSlot", slot)}
-                    className={`rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all sm:rounded-xl sm:px-4 sm:py-3 sm:text-base lg:py-4 lg:text-lg ${formData.timeSlot === slot
-                        ? "border-green-700 bg-green-700 text-white shadow-lg"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-green-700 hover:bg-green-50 hover:shadow-md"
-                      }`}
-                  >
-                    {slot}
-                  </button>
-                )
+                (slot) => {
+                  const slotInfo = getSlotInfo(slot);
+                  const isAvailable = isSlotAvailable(slot);
+                  const isSelected = formData.timeSlot === slot;
+                  
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => isAvailable && handleInputChange("timeSlot", slot)}
+                      disabled={!isAvailable || loadingSlots}
+                      className={`rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all sm:rounded-xl sm:px-4 sm:py-3 sm:text-base lg:py-4 lg:text-lg ${
+                        isSelected
+                          ? "border-green-700 bg-green-700 text-white shadow-lg"
+                          : isAvailable
+                          ? "border-gray-200 bg-white text-gray-700 hover:border-green-700 hover:bg-green-50 hover:shadow-md"
+                          : "border-red-200 bg-red-50 text-red-400 cursor-not-allowed opacity-75"
+                      } ${loadingSlots ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <div>{slot}</div>
+                      {formData.scheduleDate && (
+                        <div className="text-xs mt-1 font-normal">
+                          {isAvailable ? (
+                            <span className={slotInfo.available <= 2 ? 'text-orange-500 font-semibold' : isSelected ? 'text-white' : 'text-gray-500'}>
+                              {slotInfo.available}/5
+                            </span>
+                          ) : (
+                            <span className="text-red-600 font-semibold">Full</span>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  );
+                }
               )}
             </div>
           </div>

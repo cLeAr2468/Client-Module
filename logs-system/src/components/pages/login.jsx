@@ -75,7 +75,12 @@ function Login() {
       navigate("/dashboard");
     } catch (err) {
       console.error("❌ Login failed:", err);
-      setLoginError(err.message || "Invalid email or password. Please try again.");
+      
+      // Extract error message (err is now an Error object)
+      const errorMessage = err.message || "Invalid email or password. Please try again.";
+      
+      setLoginError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
