@@ -120,9 +120,20 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
         console.log('✅ Available slots:', data.available_slots);
         console.log('📈 Slot details:', data.slot_details);
         
+        // Check if slot_details exists and has data
+        if (!data.slot_details || Object.keys(data.slot_details).length === 0) {
+          console.warn('⚠️ No slot_details received from backend!');
+        }
+        
         setAvailableSlots(data.available_slots || { morning: [], afternoon: [] });
         setFullSlots(data.full_slots || []);
         setSlotDetails(data.slot_details || {});
+        
+        console.log('💾 State updated:', {
+          availableSlots: data.available_slots,
+          fullSlots: data.full_slots,
+          slotDetails: data.slot_details
+        });
         
         // Clear selected time slot if it's now full
         if (formData.timeSlot && data.full_slots?.includes(formData.timeSlot)) {
@@ -130,7 +141,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
           toast.warning("Selected time slot is now full. Please choose another slot.");
         }
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         console.error('❌ Failed to fetch slots:', response.status, errorData);
         toast.error('Failed to fetch available time slots');
       }
@@ -149,7 +160,9 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
 
   // Get slot availability info
   const getSlotInfo = (timeSlot) => {
-    return slotDetails[timeSlot] || { total: 5, booked: 0, available: 5 };
+    const info = slotDetails[timeSlot] || { total: 5, booked: 0, available: 5 };
+    // console.log(`Slot ${timeSlot} info:`, info);
+    return info;
   };
 
   // Get today's date in YYYY-MM-DD format for min attribute
@@ -427,7 +440,11 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                     <button
                       key={slot}
                       type="button"
-                      onClick={() => isAvailable && handleInputChange("timeSlot", slot)}
+                      onClick={() => {
+                        if (isAvailable && !loadingSlots) {
+                          handleInputChange("timeSlot", slot);
+                        }
+                      }}
                       disabled={!isAvailable || loadingSlots}
                       className={`rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all sm:rounded-xl sm:px-4 sm:py-3 sm:text-base lg:py-4 lg:text-lg ${
                         isSelected
@@ -437,15 +454,15 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                           : "border-red-200 bg-red-50 text-red-400 cursor-not-allowed opacity-75"
                       } ${loadingSlots ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <div>{slot}</div>
+                      <div className="font-semibold">{slot}</div>
                       {formData.scheduleDate && (
                         <div className="text-xs mt-1 font-normal">
                           {isAvailable ? (
                             <span className={slotInfo.available <= 2 ? 'text-orange-500 font-semibold' : isSelected ? 'text-white' : 'text-gray-500'}>
-                              {slotInfo.available}/5
+                              {slotInfo.available}/{slotInfo.total}
                             </span>
                           ) : (
-                            <span className="text-red-600 font-semibold">Full</span>
+                            <span className="text-red-600 font-semibold">0/5</span>
                           )}
                         </div>
                       )}
