@@ -251,9 +251,9 @@ export default function Appointments() {
                   
                   {/* Purpose Filter Dropdown */}
                   <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-gray-500" />
+                    <Filter className="h-4 w-4 text-white" />
                     <Select value={purposeFilter} onValueChange={setPurposeFilter}>
-                      <SelectTrigger className="w-[200px] h-10">
+                      <SelectTrigger className="w-[200px] h-10 bg-white">
                         <SelectValue placeholder="Filter by purpose" />
                       </SelectTrigger>
                       <SelectContent>
@@ -402,7 +402,7 @@ export default function Appointments() {
                   </div>
                 )}
                 
-                <div className="flex gap-2 flex-wrap">{renderFilterButtons()}</div>
+                <div className="flex gap-2 justify-center w-full">{renderFilterButtons()}</div>
                 
                 {/* Purpose Filter Dropdown for Mobile */}
                 <div className="flex items-center gap-2 w-full">

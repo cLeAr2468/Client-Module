@@ -195,13 +195,15 @@ export default function EditProfileDialog({
               <SelectTrigger>
                 <SelectValue placeholder="Select Course" />
               </SelectTrigger>
-
-              <SelectContent className="text-sm">
-                    <SelectItem value="BSCS">BSCS</SelectItem>
+                  <SelectContent className="text-sm">
+                    <SelectItem value="BEED">BEED</SelectItem>
                     <SelectItem value="BSIT">BSIT</SelectItem>
-                    <SelectItem value="BSCOE">BSCOE</SelectItem>
-                    <SelectItem value="BSEE">BSEE</SelectItem>
-                    <SelectItem value="BSME">BSME</SelectItem>
+                    <SelectItem value="BTLED">BTLED</SelectItem>
+                    <SelectItem value="BSABE">BSABE</SelectItem>
+                    <SelectItem value="BSCRIM">BSCRIM</SelectItem>
+                    <SelectItem value="BAT">BSA</SelectItem>
+                    <SelectItem value="BAT">BAT</SelectItem>
+                    <SelectItem value="BAT">BSF</SelectItem>
                   </SelectContent>
             </Select>
           </div>
