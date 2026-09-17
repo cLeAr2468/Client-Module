@@ -191,9 +191,10 @@ export default function Register() {
                 <Input
                   id="fname"
                   placeholder="First Name"
-                  className="h-9 border border-gray-300 bg-white text-sm"
+                  className="h-9 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
                   value={form.fname}
                   onChange={handleChange}
+                  readOnly
                 />
               </div>
 
@@ -205,9 +206,10 @@ export default function Register() {
                 <Input
                   id="mname"
                   placeholder="Middle Name (Optional)"
-                  className="h-9 border border-gray-300 bg-white text-sm"
+                  className="h-9 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
                   value={form.mname}
                   onChange={handleChange}
+                  readOnly
                 />
               </div>
 
@@ -219,9 +221,10 @@ export default function Register() {
                 <Input
                   id="lname"
                   placeholder="Last Name"
-                  className="h-9 border border-gray-300 bg-white text-sm"
+                  className="h-9 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
                   value={form.lname}
                   onChange={handleChange}
+                  readOnly
                 />
               </div>
 
@@ -233,8 +236,9 @@ export default function Register() {
                 <Select value={form.course}
                   onValueChange={(value) =>
                     setForm({ ...form, course: value })
-                  }>
-                  <SelectTrigger className="h-9 w-full border border-gray-300 bg-white text-sm">
+                  }
+                  disabled>
+                  <SelectTrigger className="h-9 w-full border border-gray-300 bg-gray-100 text-sm cursor-not-allowed">
                     <SelectValue placeholder="Select Course" />
                   </SelectTrigger>
                   <SelectContent className="text-sm">
@@ -257,8 +261,9 @@ export default function Register() {
                   onValueChange={(value) =>
                     setForm({ ...form, year_level: value })
                   }
+                  disabled
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full bg-gray-100 cursor-not-allowed">
                     <div className="flex items-center gap-2">
                       <School className="h-4 w-4 text-muted-foreground" />
                       <SelectValue placeholder="Select Year Level" />
@@ -266,20 +271,20 @@ export default function Register() {
                   </SelectTrigger>
 
                   <SelectContent>
-                    <SelectItem value="1st Year">
-                      1st Year
+                    <SelectItem value="1">
+                      1
                     </SelectItem>
 
-                    <SelectItem value="2nd Year">
-                      2nd Year
+                    <SelectItem value="2">
+                      2
                     </SelectItem>
 
-                    <SelectItem value="3rd Year">
-                      3rd Year
+                    <SelectItem value="3">
+                      3
                     </SelectItem>
 
-                    <SelectItem value="4th Year">
-                      4th Year
+                    <SelectItem value="4">
+                      4
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -296,9 +301,10 @@ export default function Register() {
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    className="h-9 border border-gray-300 bg-white pl-9 text-sm"
+                    className="h-9 border border-gray-300 bg-gray-100 pl-9 text-sm cursor-not-allowed"
                     value={form.email}
                     onChange={handleChange}
+                    readOnly
                   />
                 </div>
               </div>
@@ -309,7 +315,7 @@ export default function Register() {
                 <Input
                   id="barangay"
                   placeholder="Barangay"
-                  className="h-9 border border-gray-300 bg-white text-sm"
+                  className="h-9 border border-gray-300 bg-white text-sm" 
                   value={form.barangay}
                   onChange={handleChange}
                   required
@@ -485,9 +491,10 @@ export default function Register() {
                     <Input
                       id="fname"
                       placeholder="First Name"
-                      className="h-10 border border-gray-300 bg-white text-sm"
+                      className="h-10 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
                       value={form.fname}
                       onChange={handleChange}
+                      readOnly
                     />
                   </div>
 
@@ -498,9 +505,10 @@ export default function Register() {
                     <Input
                       id="mname"
                       placeholder="Middle Name (Optional)"
-                      className="h-10 border border-gray-300 bg-white text-sm"
+                      className="h-10 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
                       value={form.mname}
                       onChange={handleChange}
+                      readOnly
                     />
                   </div>
                 </div>
@@ -513,9 +521,10 @@ export default function Register() {
                     <Input
                       id="lname"
                       placeholder="Last Name"
-                      className="h-10 border border-gray-300 bg-white text-sm"
+                      className="h-10 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
                       value={form.lname}
                       onChange={handleChange}
+                      readOnly
                     />
                   </div>
                   <div>
@@ -528,9 +537,10 @@ export default function Register() {
                         id="email"
                         type="email"
                         placeholder="Enter your email"
-                        className="h-10 border border-gray-300 bg-white pl-9 text-sm"
+                        className="h-10 border border-gray-300 bg-gray-100 pl-9 text-sm cursor-not-allowed"
                         value={form.email}
                         onChange={handleChange}
+                        readOnly
                       />
                     </div>
                   </div>
@@ -586,8 +596,9 @@ export default function Register() {
                 <Select value={form.course}
                   onValueChange={(value) =>
                     setForm({ ...form, course: value })
-                  }>
-                  <SelectTrigger className="h-9 w-full border border-gray-300 bg-white text-sm">
+                  }
+                  disabled>
+                  <SelectTrigger className="h-9 w-full border border-gray-300 bg-gray-100 text-sm cursor-not-allowed">
                     <SelectValue placeholder="Select Course" />
                   </SelectTrigger>
                   <SelectContent className="text-sm">
@@ -610,8 +621,9 @@ export default function Register() {
                   onValueChange={(value) =>
                     setForm({ ...form, year_level: value })
                   }
+                  disabled
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full bg-gray-100 cursor-not-allowed">
                     <div className="flex items-center gap-2">
                       <School className="h-4 w-4 text-muted-foreground" />
                       <SelectValue placeholder="Select Year Level" />
@@ -619,20 +631,20 @@ export default function Register() {
                   </SelectTrigger>
 
                   <SelectContent>
-                    <SelectItem value="1st Year">
-                      1st Year
+                    <SelectItem value="1">
+                      1
                     </SelectItem>
 
-                    <SelectItem value="2nd Year">
-                      2nd Year
+                    <SelectItem value="2">
+                      2
                     </SelectItem>
 
-                    <SelectItem value="3rd Year">
-                      3rd Year
+                    <SelectItem value="3">
+                      3
                     </SelectItem>
 
-                    <SelectItem value="4th Year">
-                      4th Year
+                    <SelectItem value="4">
+                      4
                     </SelectItem>
                   </SelectContent>
                 </Select>

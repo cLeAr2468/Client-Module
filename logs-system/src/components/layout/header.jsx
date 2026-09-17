@@ -8,6 +8,13 @@ import { toast } from "sonner";
 export default function Header() {
   const navigate = useNavigate();
   const isLoggedIn = isAuthenticated();
+  
+  // Debug logging
+  console.log('🔍 Header Debug:', {
+    isLoggedIn,
+    token: localStorage.getItem('auth_token'),
+    userData: localStorage.getItem('user_data')
+  });
 
   const handleLogout = () => {
     toast.warning(

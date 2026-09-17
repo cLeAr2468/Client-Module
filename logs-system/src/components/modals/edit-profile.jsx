@@ -105,6 +105,8 @@ export default function EditProfileDialog({
               name="student_id"
               value={form.student_id}
               onChange={handleChange}
+              readOnly
+              className="bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -116,6 +118,8 @@ export default function EditProfileDialog({
               name="email"
               value={form.email}
               onChange={handleChange}
+              readOnly
+              className="bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -126,6 +130,8 @@ export default function EditProfileDialog({
               name="firstname"
               value={form.firstname}
               onChange={handleChange}
+              readOnly
+              className="bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -137,6 +143,8 @@ export default function EditProfileDialog({
               placeholder="Middle Name (Optional)"
               value={form.middlename || ""}
               onChange={handleChange}
+              readOnly
+              className="bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -147,6 +155,8 @@ export default function EditProfileDialog({
               name="lastname"
               value={form.lastname}
               onChange={handleChange}
+              readOnly
+              className="bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -191,8 +201,9 @@ export default function EditProfileDialog({
                   course: value,
                 })
               }
+              disabled
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-gray-100 cursor-not-allowed">
                 <SelectValue placeholder="Select Course" />
               </SelectTrigger>
                   <SelectContent className="text-sm">
@@ -221,26 +232,27 @@ export default function EditProfileDialog({
                   year: value,
                 })
               }
+              disabled
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-gray-100 cursor-not-allowed">
                 <SelectValue placeholder="Select Year" />
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="1st Year">
-                  1st Year
+                <SelectItem value="1">
+                  1
                 </SelectItem>
 
-                <SelectItem value="2nd Year">
-                  2nd Year
+                <SelectItem value="2">
+                  2
                 </SelectItem>
 
-                <SelectItem value="3rd Year">
-                  3rd Year
+                <SelectItem value="3">
+                  3
                 </SelectItem>
 
-                <SelectItem value="4th Year">
-                  4th Year
+                <SelectItem value="4">
+                  4
                 </SelectItem>
               </SelectContent>
             </Select>

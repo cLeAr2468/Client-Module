@@ -5,16 +5,35 @@
  * @returns {boolean} True if user has valid token
  */
 export const isAuthenticated = () => {
-  const token = localStorage.getItem('auth_token');
-  return !!token;
+  const token = sessionStorage.getItem('auth_token');
+  const userData = sessionStorage.getItem('user_data');
+  
+  // Check if both token and user data exist
+  if (!token || !userData) {
+    return false;
+  }
+  
+  // Verify user data is valid JSON
+  try {
+    const user = JSON.parse(userData);
+    // Check if user object has required properties
+    if (!user || !user.student_id) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    // Invalid JSON, clear auth data
+    clearAuth();
+    return false;
+  }
 };
 
 /**
- * Get current user data from localStorage
+ * Get current user data from sessionStorage
  * @returns {Object|null} User object or null if not found
  */
 export const getUser = () => {
-  const userData = localStorage.getItem('user_data');
+  const userData = sessionStorage.getItem('user_data');
   return userData ? JSON.parse(userData) : null;
 };
 
@@ -23,7 +42,7 @@ export const getUser = () => {
  * @returns {string|null} Auth token or null
  */
 export const getToken = () => {
-  return localStorage.getItem('auth_token');
+  return sessionStorage.getItem('auth_token');
 };
 
 /**
@@ -40,19 +59,21 @@ export const logout = () => {
 };
 
 /**
- * Save user data to localStorage
+ * Save user data to sessionStorage
  * @param {Object} userData - User data object
  * @param {string} token - Authentication token
  */
 export const saveAuth = (userData, token) => {
-  localStorage.setItem('auth_token', token);
-  localStorage.setItem('user_data', JSON.stringify(userData));
+  sessionStorage.setItem('auth_token', token);
+  sessionStorage.setItem('user_data', JSON.stringify(userData));
 };
 
 /**
  * Clear all authentication data
  */
 export const clearAuth = () => {
+  sessionStorage.removeItem('auth_token');
+  sessionStorage.removeItem('user_data');
   localStorage.removeItem('auth_token');
   localStorage.removeItem('user_data');
   localStorage.removeItem('remember_me');
