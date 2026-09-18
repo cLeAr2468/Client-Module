@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AddressSelector from "@/components/common/AddressSelector";
 
 import { Mail, Lock, Eye, EyeOff, School } from "lucide-react";
 import { toast } from "sonner";
@@ -191,10 +192,10 @@ export default function Register() {
                 <Input
                   id="fname"
                   placeholder="First Name"
-                  className="h-9 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
+                  className="h-9 border border-gray-300 bg-white text-sm"
                   value={form.fname}
                   onChange={handleChange}
-                  readOnly
+                  required
                 />
               </div>
 
@@ -206,10 +207,9 @@ export default function Register() {
                 <Input
                   id="mname"
                   placeholder="Middle Name (Optional)"
-                  className="h-9 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
+                  className="h-9 border border-gray-300 bg-white text-sm"
                   value={form.mname}
                   onChange={handleChange}
-                  readOnly
                 />
               </div>
 
@@ -221,10 +221,10 @@ export default function Register() {
                 <Input
                   id="lname"
                   placeholder="Last Name"
-                  className="h-9 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
+                  className="h-9 border border-gray-300 bg-white text-sm"
                   value={form.lname}
                   onChange={handleChange}
-                  readOnly
+                  required
                 />
               </div>
 
@@ -237,8 +237,8 @@ export default function Register() {
                   onValueChange={(value) =>
                     setForm({ ...form, course: value })
                   }
-                  disabled>
-                  <SelectTrigger className="h-9 w-full border border-gray-300 bg-gray-100 text-sm cursor-not-allowed">
+                  required>
+                  <SelectTrigger className="h-9 w-full border border-gray-300 bg-white text-sm">
                     <SelectValue placeholder="Select Course" />
                   </SelectTrigger>
                   <SelectContent className="text-sm">
@@ -261,9 +261,9 @@ export default function Register() {
                   onValueChange={(value) =>
                     setForm({ ...form, year_level: value })
                   }
-                  disabled
+                  required
                 >
-                  <SelectTrigger className="w-full bg-gray-100 cursor-not-allowed">
+                  <SelectTrigger className="w-full bg-white">
                     <div className="flex items-center gap-2">
                       <School className="h-4 w-4 text-muted-foreground" />
                       <SelectValue placeholder="Select Year Level" />
@@ -308,43 +308,25 @@ export default function Register() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  Barangay:
-                </label>
-                <Input
-                  id="barangay"
-                  placeholder="Barangay"
-                  className="h-9 border border-gray-300 bg-white text-sm" 
-                  value={form.barangay}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  City/Municipality:
-                </label>
-                <Input
-                  id="municipality"
-                  placeholder="City/Municipality"
-                  className="h-9 border border-gray-300 bg-white text-sm"
-                  value={form.municipality}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  Province:
-                </label>
-                <Input
-                  id="province"
-                  placeholder="Province"
-                  className="h-9 border border-gray-300 bg-white text-sm"
-                  value={form.province}
-                  onChange={handleChange}
-                  required
+
+              {/* Address Selector - Mobile */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold">Address Information</h3>
+                <AddressSelector
+                  province={form.province}
+                  municipality={form.municipality}
+                  barangay={form.barangay}
+                  onProvinceChange={(value) =>
+                    setForm({ ...form, province: value, municipality: "", barangay: "" })
+                  }
+                  onMunicipalityChange={(value) =>
+                    setForm({ ...form, municipality: value, barangay: "" })
+                  }
+                  onBarangayChange={(value) => 
+                    setForm({ ...form, barangay: value })
+                  }
+                  required={true}
+                  layout="stacked"
                 />
               </div>
 
@@ -491,10 +473,10 @@ export default function Register() {
                     <Input
                       id="fname"
                       placeholder="First Name"
-                      className="h-10 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
+                      className="h-10 border border-gray-300 bg-white text-sm"
                       value={form.fname}
                       onChange={handleChange}
-                      readOnly
+                      required
                     />
                   </div>
 
@@ -505,10 +487,9 @@ export default function Register() {
                     <Input
                       id="mname"
                       placeholder="Middle Name (Optional)"
-                      className="h-10 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
+                      className="h-10 border border-gray-300 bg-white text-sm"
                       value={form.mname}
                       onChange={handleChange}
-                      readOnly
                     />
                   </div>
                 </div>
@@ -521,10 +502,10 @@ export default function Register() {
                     <Input
                       id="lname"
                       placeholder="Last Name"
-                      className="h-10 border border-gray-300 bg-gray-100 text-sm cursor-not-allowed"
+                      className="h-10 border border-gray-300 bg-white text-sm"
                       value={form.lname}
                       onChange={handleChange}
-                      readOnly
+                      required
                     />
                   </div>
                   <div>
@@ -545,49 +526,29 @@ export default function Register() {
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                 <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  Barangay:
-                </label>
-                <Input
-                  id="barangay"
-                  placeholder="Barangay"
-                  className="h-9 border border-gray-300 bg-white text-sm"
-                  value={form.barangay}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-                <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  City/Municipality:
-                </label>
-                <Input
-                  id="municipality"
-                  placeholder="City/Municipality"
-                  className="h-9 border border-gray-300 bg-white text-sm"
-                  value={form.municipality}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  Province:
-                </label>
-                <Input
-                  id="province"
-                  placeholder="Province"
-                  className="h-9 border border-gray-300 bg-white text-sm"
-                  value={form.province}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
 
-                {/* Course & Email - Desktop */}
+                {/* Address Selector - Desktop */}
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="text-base font-semibold">Address Information</h3>
+                  <AddressSelector
+                    province={form.province}
+                    municipality={form.municipality}
+                    barangay={form.barangay}
+                    onProvinceChange={(value) =>
+                      setForm({ ...form, province: value, municipality: "", barangay: "" })
+                    }
+                    onMunicipalityChange={(value) =>
+                      setForm({ ...form, municipality: value, barangay: "" })
+                    }
+                    onBarangayChange={(value) => 
+                      setForm({ ...form, barangay: value })
+                    }
+                    required={true}
+                    layout="grid"
+                  />
+                </div>
+
+                {/* Course & Year Level - Desktop */}
                 <div className="grid grid-cols-2 gap-4">
                 <div> 
                 <label className="mb-1.5 block text-sm font-medium">
@@ -597,8 +558,8 @@ export default function Register() {
                   onValueChange={(value) =>
                     setForm({ ...form, course: value })
                   }
-                  disabled>
-                  <SelectTrigger className="h-9 w-full border border-gray-300 bg-gray-100 text-sm cursor-not-allowed">
+                  required>
+                  <SelectTrigger className="h-9 w-full border border-gray-300 bg-white text-sm">
                     <SelectValue placeholder="Select Course" />
                   </SelectTrigger>
                   <SelectContent className="text-sm">
@@ -621,9 +582,9 @@ export default function Register() {
                   onValueChange={(value) =>
                     setForm({ ...form, year_level: value })
                   }
-                  disabled
+                  required
                 >
-                  <SelectTrigger className="w-full bg-gray-100 cursor-not-allowed">
+                  <SelectTrigger className="w-full bg-white">
                     <div className="flex items-center gap-2">
                       <School className="h-4 w-4 text-muted-foreground" />
                       <SelectValue placeholder="Select Year Level" />

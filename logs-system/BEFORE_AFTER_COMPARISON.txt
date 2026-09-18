@@ -1,0 +1,208 @@
+================================================================================
+                    REGISTER.JSX - BEFORE & AFTER COMPARISON
+================================================================================
+
+BEFORE (Old Address Inputs):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┌─────────────────────────────────────────────────────────────────────────┐
+│  Email:                                                                  │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 📧 lorelyn@gmail.com                                              │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│  Barangay:                                                               │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ Type any text here...                                             │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│  City/Municipality:                                                      │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ Type any text here...                                             │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│  Province:                                                               │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ Type any text here...                                             │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+PROBLEMS:
+❌ Users can type anything (typos, wrong spelling)
+❌ No validation - "Manila" can be entered for Leyte
+❌ Inconsistent data (Tacloban vs Tacloban City vs tacloban)
+❌ No relationship between province, municipality, barangay
+❌ Database will have messy, inconsistent address data
+
+
+================================================================================
+
+AFTER (New Cascading Dropdowns):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┌─────────────────────────────────────────────────────────────────────────┐
+│  Email:                                                                  │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 📧 lorelyn@gmail.com                                              │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│  ╔═══════════════════════════════════════════════════════════════════╗  │
+│  ║              📍 Address Information                                ║  │
+│  ╚═══════════════════════════════════════════════════════════════════╝  │
+│                                                                          │
+│  Province *                                                              │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 🗺️  Leyte                                                    ▼    │  │ ← DROPDOWN
+│  └───────────────────────────────────────────────────────────────────┘  │
+│      Options: Leyte, Southern Leyte, Eastern Samar, etc.                │
+│                                                                          │
+│  City/Municipality *                                                     │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 🗺️  San Jorge                                                ▼    │  │ ← DROPDOWN (Filtered!)
+│  └───────────────────────────────────────────────────────────────────┘  │
+│      Only shows: Tacloban, Ormoc, Baybay, San Jorge... (Leyte only!)   │
+│                                                                          │
+│  Barangay *                                                              │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 🗺️  Poblacion 1                                              ▼    │  │ ← DROPDOWN (Filtered!)
+│  └───────────────────────────────────────────────────────────────────┘  │
+│      Only shows: Poblacion 1-5, Mabuhay, Calapi... (San Jorge only!)   │
+└─────────────────────────────────────────────────────────────────────────┘
+
+BENEFITS:
+✅ No typos - users select from predefined list
+✅ Always consistent - "Tacloban City" always spelled the same
+✅ Validates relationships - can't select Manila municipality for Leyte
+✅ Clean database - all addresses follow same format
+✅ User-friendly - no need to remember exact barangay names
+✅ Auto-resets - changing province clears invalid municipality/barangay
+
+
+================================================================================
+
+REAL EXAMPLE - User Flow:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: Select Province
+┌───────────────────────────┐
+│ Province *                │
+│ ┌─────────────────────┐   │
+│ │ Leyte            ▼ │   │ ← User clicks
+│ └─────────────────────┘   │
+└───────────────────────────┘
+
+Dropdown shows:
+┌─────────────────────────┐
+│ Leyte                   │ ✓ Selected
+│ Southern Leyte          │
+│ Eastern Samar           │
+│ Northern Samar          │
+│ Samar (Western Samar)   │
+│ Biliran                 │
+└─────────────────────────┘
+
+
+STEP 2: Municipality Dropdown Activates (only Leyte options!)
+┌───────────────────────────┐
+│ City/Municipality *       │
+│ ┌─────────────────────┐   │
+│ │ San Jorge        ▼ │   │ ← User clicks
+│ └─────────────────────┘   │
+└───────────────────────────┘
+
+Dropdown shows ONLY Leyte municipalities:
+┌─────────────────────────┐
+│ Tacloban City           │
+│ Ormoc City              │
+│ Baybay City             │
+│ San Jorge               │ ✓ Selected
+│ Abuyog                  │
+│ Albuera                 │
+│ ... (only Leyte!)       │
+└─────────────────────────┘
+
+
+STEP 3: Barangay Dropdown Activates (only San Jorge options!)
+┌───────────────────────────┐
+│ Barangay *                │
+│ ┌─────────────────────┐   │
+│ │ Poblacion 1      ▼ │   │ ← User clicks
+│ └─────────────────────┘   │
+└───────────────────────────┘
+
+Dropdown shows ONLY San Jorge barangays:
+┌─────────────────────────┐
+│ Poblacion 1             │ ✓ Selected
+│ Poblacion 2             │
+│ Poblacion 3             │
+│ Mabuhay                 │
+│ Calapi                  │
+│ Santo Niño              │
+│ ... (only San Jorge!)   │
+└─────────────────────────┘
+
+
+FINAL RESULT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Province:     Leyte
+Municipality: San Jorge  
+Barangay:     Poblacion 1
+
+Complete Address: "Poblacion 1, San Jorge, Leyte" ✅
+
+
+================================================================================
+
+WHAT IF USER CHANGES MIND?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+User has selected:
+  Province:     Leyte
+  Municipality: San Jorge
+  Barangay:     Poblacion 1
+
+User changes Province to "Southern Leyte":
+  Province:     Southern Leyte     ← Changed
+  Municipality: [CLEARED]           ← Auto-reset!
+  Barangay:     [CLEARED]           ← Auto-reset!
+
+Why? Because San Jorge is not in Southern Leyte!
+System automatically clears invalid selections.
+
+User now sees municipalities for Southern Leyte only:
+┌─────────────────────────┐
+│ Maasin City             │
+│ Sogod                   │
+│ Hinunangan              │
+│ ... (Southern Leyte!)   │
+└─────────────────────────┘
+
+
+================================================================================
+
+DATA COVERAGE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Province                 Municipalities    Sample Barangay Data
+────────────────────────────────────────────────────────────────────────────
+Leyte                    43                ✅ Tacloban (20)
+                                           ✅ Ormoc (20)
+                                           ✅ Baybay (20)
+                                           ✅ San Jorge (20)
+                                           ✅ Albuera (12)
+
+Southern Leyte           19                ✅ Maasin City (18)
+                                           ✅ Sogod (15)
+
+Eastern Samar            23                (Municipalities only)
+Northern Samar           24                (Municipalities only)
+Samar (Western Samar)    26                (Municipalities only)
+Biliran                   8                (Municipalities only)
+────────────────────────────────────────────────────────────────────────────
+TOTAL                   143 municipalities
+                        125+ barangays
+
+Note: Municipalities without barangay data will show a text input instead.
+
+
+================================================================================
+                              UPDATE COMPLETE! 🎉
+================================================================================

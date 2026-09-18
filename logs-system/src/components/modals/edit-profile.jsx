@@ -130,8 +130,6 @@ export default function EditProfileDialog({
               name="firstname"
               value={form.firstname}
               onChange={handleChange}
-              readOnly
-              className="bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -143,8 +141,6 @@ export default function EditProfileDialog({
               placeholder="Middle Name (Optional)"
               value={form.middlename || ""}
               onChange={handleChange}
-              readOnly
-              className="bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -155,8 +151,6 @@ export default function EditProfileDialog({
               name="lastname"
               value={form.lastname}
               onChange={handleChange}
-              readOnly
-              className="bg-gray-100 cursor-not-allowed"
             />
           </div>
 
@@ -171,8 +165,9 @@ export default function EditProfileDialog({
                   status: value,
                 })
               }
+              disabled
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-gray-100 cursor-not-allowed">
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
 
@@ -201,9 +196,8 @@ export default function EditProfileDialog({
                   course: value,
                 })
               }
-              disabled
             >
-              <SelectTrigger className="bg-gray-100 cursor-not-allowed">
+              <SelectTrigger>
                 <SelectValue placeholder="Select Course" />
               </SelectTrigger>
                   <SelectContent className="text-sm">
@@ -232,9 +226,8 @@ export default function EditProfileDialog({
                   year: value,
                 })
               }
-              disabled
             >
-              <SelectTrigger className="bg-gray-100 cursor-not-allowed">
+              <SelectTrigger>
                 <SelectValue placeholder="Select Year" />
               </SelectTrigger>
 

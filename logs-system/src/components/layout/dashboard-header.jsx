@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/assets/nwssu 1.png";
 import {
   LogOut,
-  Settings,
   Menu,
   X,
   PencilLine,
@@ -20,15 +19,38 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Avatar,
+  AvatarFallback,
+} from "@/components/ui/avatar";
 import ChangePass from "@/components/modals/change-pass";
 import { logout } from "@/utils/auth";
 import { toast } from "sonner";
+import { getProfile } from "@/api/profileApi";
 
 export default function DashboardHeader() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isChangePassOpen, setIsChangePassOpen] = useState(false);
   const location = useLocation();
+  const [user, setUser] = useState(null);
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await getProfile();
+      setUser(response.user);
+    } catch (error) {
+      console.error("Failed to load user profile:", error);
+    }
+  };
+
+  // Generate user initials - same as profile page
+  const initials = `${user?.firstname?.charAt(0) ?? ""}${user?.lastname?.charAt(0) ?? ""}`.toUpperCase();
 
   const handlePasswordChange = async ({ currentPassword, newPassword }) => {
     console.log("Change password:", { currentPassword, newPassword });
@@ -153,7 +175,11 @@ export default function DashboardHeader() {
                         : "hover:bg-green-700"
                     }`}
                   >
-                    <Settings className="h-4 w-4 text-white" />
+                    <Avatar className="h-6 w-6 ">
+                      <AvatarFallback className="bg-green-700 text-white text-xs font-bold ">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
                     <span className="text-sm font-medium text-white">Settings</span>
                   </button>
 
@@ -291,9 +317,11 @@ export default function DashboardHeader() {
                       : "hover:bg-green-700"
                   }`}
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white">
-                    <Settings />
-                  </div>
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-green-700 text-white text-sm font-bold">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
                   <span className="text-sm font-medium text-white">Settings</span>
                 </button>
               </DropdownMenuTrigger>
