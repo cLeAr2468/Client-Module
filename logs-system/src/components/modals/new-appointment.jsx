@@ -56,6 +56,15 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   // Fetch available slots when date changes
   useEffect(() => {
     if (formData.scheduleDate) {
+      // Check if selected date is a weekend
+      if (isDateDisabled(formData.scheduleDate)) {
+        toast.error('Weekends are not available for appointments. Please select a weekday.');
+        setFormData(prev => ({ ...prev, scheduleDate: '' }));
+        setAvailableSlots({ morning: [], afternoon: [] });
+        setFullSlots([]);
+        setSlotDetails({});
+        return;
+      }
       fetchAvailableSlots();
     }
   }, [formData.scheduleDate]);
@@ -167,6 +176,20 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
 
   // Get today's date in YYYY-MM-DD format for min attribute
   const today = new Date().toISOString().split('T')[0];
+
+  // Function to check if a date is a weekend (Saturday or Sunday)
+  const isWeekend = (dateString) => {
+    const date = new Date(dateString + 'T00:00:00');
+    const day = date.getDay();
+    return day === 0 || day === 6; // 0 = Sunday, 6 = Saturday
+  };
+
+  // Function to check if date should be disabled
+  const isDateDisabled = (dateString) => {
+    return isWeekend(dateString);
+    // Future: Add holiday checking here
+    // return isWeekend(dateString) || isHoliday(dateString);
+  };
 
   const morningSlots = [
       
@@ -320,14 +343,32 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
               </Label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 sm:top-3 lg:h-6 lg:w-6 lg:top-3.5" />
+                <style>{`
+                  /* Style for date input */
+                  input[type="date"]::-webkit-calendar-picker-indicator {
+                    cursor: pointer;
+                  }
+                `}</style>
                 <Input
                   type="date"
                   value={formData.scheduleDate}
-                  onChange={(e) => handleInputChange("scheduleDate", e.target.value)}
+                  onChange={(e) => {
+                    const selectedDate = e.target.value;
+                    if (isDateDisabled(selectedDate)) {
+                      toast.error('Saturdays and Sundays are not available for appointments');
+                      return;
+                    }
+                    handleInputChange("scheduleDate", selectedDate);
+                  }}
                   min={today}
-                  className="h-10 rounded-lg border-2 pl-11 text-sm sm:h-12 sm:rounded-xl sm:text-base lg:h-14 lg:pl-14 lg:text-lg"
+                  className="h-10 rounded-lg border-2 pl-11 text-sm sm:h-12 sm:rounded-xl sm:text-base lg:h-14 lg:pl-14 lg:text-lg cursor-pointer"
+                  onKeyDown={(e) => e.preventDefault()} // Prevent manual typing
+                  title="Weekends are not available"
                 />
               </div>
+              <p className="text-xs text-gray-500 italic">
+                * Weekends (Saturday & Sunday) are not available for appointments
+              </p>
             </div>
 
             {/* Purpose for Appointment */}
