@@ -113,6 +113,14 @@ export default function Register() {
       return;
     }
 
+    // Debug: Log form data before submitting
+    console.log("=== FORM DATA BEFORE SUBMIT ===");
+    console.log("Province:", form.province);
+    console.log("Municipality:", form.municipality);
+    console.log("Barangay:", form.barangay);
+    console.log("Full form:", form);
+    console.log("================================");
+
     setLoading(true);
 
     try {

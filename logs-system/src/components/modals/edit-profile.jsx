@@ -25,6 +25,7 @@ import {
 import { Pencil, Loader2 } from "lucide-react";
 import { updateProfile } from "@/api/profileApi";
 import { toast } from "sonner";
+import AddressSelector from "@/components/common/AddressSelector";
 
 export default function EditProfileDialog({
   user,
@@ -251,37 +252,24 @@ export default function EditProfileDialog({
             </Select>
           </div>
 
-          {/* Address */}
-          <div className="space-y-2">
-            <Label>Barangay</Label>
-
-            <Input
-              name="barangay"
-              placeholder="Enter barangay"
-              value={form.barangay || ""}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Municipality</Label>
-
-            <Input
-              name="municipality"
-              placeholder="Enter municipality"
-              value={form.municipality || ""}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Province</Label>
-
-            <Input
-              name="province"
-              placeholder="Enter province"
-              value={form.province || ""}
-              onChange={handleChange}
+          {/* Address Section */}
+          <div className="md:col-span-2 space-y-4 border-t pt-4 mt-4">
+            <h3 className="text-base font-semibold">Address Information</h3>
+            <AddressSelector
+              province={form.province || ""}
+              municipality={form.municipality || ""}
+              barangay={form.barangay || ""}
+              onProvinceChange={(value) =>
+                setForm({ ...form, province: value, municipality: "", barangay: "" })
+              }
+              onMunicipalityChange={(value) =>
+                setForm({ ...form, municipality: value, barangay: "" })
+              }
+              onBarangayChange={(value) => 
+                setForm({ ...form, barangay: value })
+              }
+              required={false}
+              layout="grid"
             />
           </div>
 
