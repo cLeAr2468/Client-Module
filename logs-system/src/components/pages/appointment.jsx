@@ -14,8 +14,9 @@ import BackgroundLayout from "@/components/layout/background-layout";
 import DashboardHeader from "@/components/layout/dashboard-header";
 import NewAppointmentDialog from "@/components/modals/new-appointment";
 import EditAppointmentDialog from "@/components/modals/edit-appoint";
+import ViewFeedbackDialog from "@/components/modals/view-feedback";
 import Pagination from "@/components/ui/pagination";
-import { Plus, Edit, RefreshCw, Filter } from "lucide-react";
+import { Plus, Edit, RefreshCw, Filter, MessageSquare } from "lucide-react";
 import { getUserAppointments, cancelAppointment } from "@/api/appointmentApi";
 import { getAllPurposes } from "@/api/purposeApi";
 import { ActivityLogger } from "@/api/activityLogApi";
@@ -32,8 +33,11 @@ import {
 export default function Appointments() {
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
   const [isEditAppointmentOpen, setIsEditAppointmentOpen] = useState(false);
+  const [isViewFeedbackOpen, setIsViewFeedbackOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [selectedTransactionId, setSelectedTransactionId] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [transactionFeedbacks, setTransactionFeedbacks] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("Pending");
@@ -43,6 +47,8 @@ export default function Appointments() {
   const [purposeFilter, setPurposeFilter] = useState("All Purposes");
   const [purposes, setPurposes] = useState([]);
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://logs-server-system-production.up.railway.app/api';
+
   // Fetch appointments
   const fetchAppointments = async () => {
     setLoading(true);
@@ -51,13 +57,44 @@ export default function Appointments() {
     try {
       const response = await getUserAppointments();
       console.log("✅ Appointments fetched:", response);
-      setTransactions(response.transactions || []);
+      const fetchedTransactions = response.transactions || [];
+      setTransactions(fetchedTransactions);
+      
+      // Fetch feedback status for completed transactions
+      fetchFeedbackStatuses(fetchedTransactions);
     } catch (err) {
       console.error("❌ Error fetching appointments:", err);
       setError(err.message || "Failed to load appointments");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch feedback status for all completed transactions
+  const fetchFeedbackStatuses = async (transactions) => {
+    const completedTransactions = transactions.filter(t => t.status === 'completed');
+    const feedbackMap = {};
+
+    await Promise.all(
+      completedTransactions.map(async (transaction) => {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${API_BASE_URL}/transaction/${transaction.id}/feedback-status`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          });
+          const data = await response.json();
+          feedbackMap[transaction.id] = data.has_feedback;
+        } catch (err) {
+          console.error(`Error checking feedback for transaction ${transaction.id}:`, err);
+          feedbackMap[transaction.id] = false;
+        }
+      })
+    );
+
+    setTransactionFeedbacks(feedbackMap);
   };
 
   // Fetch on component mount
@@ -310,6 +347,9 @@ export default function Appointments() {
                             {filter !== "Completed" && (
                               <TableHead className="text-right">Actions</TableHead>
                             )}
+                            {filter === "Completed" && (
+                              <TableHead className="text-center">Feedback</TableHead>
+                            )}
                           </TableRow>
                         </TableHeader>
 
@@ -359,6 +399,28 @@ export default function Appointments() {
                                           <span className="text-sm text-gray-500">In Progress</span>
                                         )}
                                       </div>
+                                    )}
+                                  </TableCell>
+                                )}
+                                {filter === "Completed" && (
+                                  <TableCell className="text-center">
+                                    {transactionFeedbacks[item.id] ? (
+                                      <Button
+                                        onClick={() => {
+                                          setSelectedTransactionId(item.id);
+                                          setIsViewFeedbackOpen(true);
+                                        }}
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-green-700 border-green-700 hover:bg-green-50"
+                                      >
+                                        <MessageSquare className="h-4 w-4 mr-2" />
+                                        View Feedback
+                                      </Button>
+                                    ) : (
+                                      <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                                        No feedback yet
+                                      </Badge>
                                     )}
                                   </TableCell>
                                 )}
@@ -526,6 +588,28 @@ export default function Appointments() {
                           )}
                           
                           {/* No action section for completed status */}
+                          {item.status === "completed" && (
+                            <div className="flex justify-center mt-4">
+                              {transactionFeedbacks[item.id] ? (
+                                <Button
+                                  onClick={() => {
+                                    setSelectedTransactionId(item.id);
+                                    setIsViewFeedbackOpen(true);
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-green-700 border-green-700 hover:bg-green-50"
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-2" />
+                                  View Feedback
+                                </Button>
+                              ) : (
+                                <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs">
+                                  No feedback yet
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     ))
@@ -568,6 +652,13 @@ export default function Appointments() {
         }}
         initialData={selectedAppointment}
         onSubmit={handleEditAppointment}
+      />
+
+      {/* View Feedback Modal */}
+      <ViewFeedbackDialog
+        open={isViewFeedbackOpen}
+        onOpenChange={setIsViewFeedbackOpen}
+        transactionId={selectedTransactionId}
       />
     </BackgroundLayout>
   );

@@ -3,14 +3,16 @@ import api from './api';
 // ==================== FEEDBACK APIs ====================
 
 /**
- * Submit new feedback
+ * Submit new feedback for a transaction
+ * @param {number} transactionId - Transaction ID
  * @param {number} rating - Rating from 1 to 5
  * @param {string} message - Feedback message
  * @returns {Promise} API response
  */
-export const submitFeedback = async (rating, message) => {
+export const submitFeedback = async (transactionId, rating, message) => {
   try {
     const response = await api.post('/feedback', {
+      transaction_id: transactionId,
       rating,
       message,
     });

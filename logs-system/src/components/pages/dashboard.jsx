@@ -137,7 +137,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-semibold text-gray-600">
-                      Complete Appointments
+                      Completed Appointments
                     </h3>
                     <p className="mt-2 text-3xl font-bold text-purple-600">
                       {stats.completed_appointments}
@@ -259,7 +259,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-semibold text-gray-600">
-                      Complete Appointments
+                      Completed Appointments
                     </h3>
                     <p className="mt-3 text-4xl font-bold text-purple-600">
                       {stats.completed_appointments}
