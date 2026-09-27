@@ -15,8 +15,9 @@ import DashboardHeader from "@/components/layout/dashboard-header";
 import NewAppointmentDialog from "@/components/modals/new-appointment";
 import EditAppointmentDialog from "@/components/modals/edit-appoint";
 import ViewFeedbackDialog from "@/components/modals/view-feedback";
+import GiveFeedbackDialog from "@/components/modals/give-feedback";
 import Pagination from "@/components/ui/pagination";
-import { Plus, Edit, RefreshCw, Filter, MessageSquare } from "lucide-react";
+import { Plus, Edit, RefreshCw, Filter, MessageSquare, Star } from "lucide-react";
 import { getUserAppointments, cancelAppointment } from "@/api/appointmentApi";
 import { getAllPurposes } from "@/api/purposeApi";
 import { ActivityLogger } from "@/api/activityLogApi";
@@ -34,7 +35,9 @@ export default function Appointments() {
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
   const [isEditAppointmentOpen, setIsEditAppointmentOpen] = useState(false);
   const [isViewFeedbackOpen, setIsViewFeedbackOpen] = useState(false);
+  const [isGiveFeedbackOpen, setIsGiveFeedbackOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [selectedTransactionId, setSelectedTransactionId] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [transactionFeedbacks, setTransactionFeedbacks] = useState({});
@@ -418,9 +421,17 @@ export default function Appointments() {
                                         View Feedback
                                       </Button>
                                     ) : (
-                                      <Badge variant="secondary" className="bg-gray-100 text-gray-600">
-                                        No feedback yet
-                                      </Badge>
+                                      <Button
+                                        onClick={() => {
+                                          setSelectedTransaction(item);
+                                          setIsGiveFeedbackOpen(true);
+                                        }}
+                                        size="sm"
+                                        className="bg-[#15592F] hover:bg-[#124b28] text-white"
+                                      >
+                                        <Star className="h-4 w-4 mr-2" />
+                                        Give Feedback
+                                      </Button>
                                     )}
                                   </TableCell>
                                 )}
@@ -598,15 +609,23 @@ export default function Appointments() {
                                   }}
                                   variant="outline"
                                   size="sm"
-                                  className="text-green-700 border-green-700 hover:bg-green-50"
+                                  className="w-full text-green-700 border-green-700 hover:bg-green-50"
                                 >
                                   <MessageSquare className="h-4 w-4 mr-2" />
                                   View Feedback
                                 </Button>
                               ) : (
-                                <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs">
-                                  No feedback yet
-                                </Badge>
+                                <Button
+                                  onClick={() => {
+                                    setSelectedTransaction(item);
+                                    setIsGiveFeedbackOpen(true);
+                                  }}
+                                  size="sm"
+                                  className="w-full bg-[#15592F] hover:bg-[#124b28] text-white"
+                                >
+                                  <Star className="h-4 w-4 mr-2" />
+                                  Give Feedback
+                                </Button>
                               )}
                             </div>
                           )}
@@ -659,6 +678,16 @@ export default function Appointments() {
         open={isViewFeedbackOpen}
         onOpenChange={setIsViewFeedbackOpen}
         transactionId={selectedTransactionId}
+      />
+
+      {/* Give Feedback Modal */}
+      <GiveFeedbackDialog
+        open={isGiveFeedbackOpen}
+        onOpenChange={setIsGiveFeedbackOpen}
+        transaction={selectedTransaction}
+        onSubmitSuccess={() => {
+          fetchAppointments();
+        }}
       />
     </BackgroundLayout>
   );

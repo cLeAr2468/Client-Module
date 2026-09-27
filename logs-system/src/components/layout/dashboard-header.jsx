@@ -206,16 +206,6 @@ export default function DashboardHeader() {
                         <PencilLine className="h-4 w-4" />
                         Change password
                       </button>
-
-                      <Link
-                        to="/feedback"
-                        className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm hover:bg-slate-100 ${
-                          isActive("/feedback") ? "bg-purple-100 text-purple-700 font-semibold" : ""
-                        }`}
-                      >
-                        <MessageSquareText className="h-4 w-4" />
-                        Feedback
-                      </Link>
                     </div>
                   )}
                 </div>
@@ -349,18 +339,6 @@ export default function DashboardHeader() {
                     <PencilLine className="h-4 w-4" />
                     Change Password
                   </div>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild>
-                  <Link 
-                    to="/feedback" 
-                    className={`flex cursor-pointer items-center gap-2 ${
-                      isActive("/feedback") ? "bg-purple-100 text-purple-700 font-semibold" : ""
-                    }`}
-                  >
-                    <MessageSquareText className="h-4 w-4" />
-                    Feedback
-                  </Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem 

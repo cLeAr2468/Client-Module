@@ -6,7 +6,6 @@ import Dashboard from "@/components/pages/dashboard";
 import Appointment from "@/components/pages/appointment";
 import HistoryTransactions from "@/components/pages/transact-history";
 import ProfileDisplay from "@/components/pages/profile-info";
-import Feedback from "@/components/pages/feedback";
 import ProtectedRoute from "./ProtectedRoute";
 
 function Reroutes() {
@@ -23,7 +22,6 @@ function Reroutes() {
       <Route path="/Appointments" element={<ProtectedRoute><Appointment /></ProtectedRoute>} />
       <Route path="/Transactions" element={<ProtectedRoute><HistoryTransactions /></ProtectedRoute>} />
       <Route path="/Profile" element={<ProtectedRoute><ProfileDisplay /></ProtectedRoute>} />
-      <Route path="/Feedback" element={<ProtectedRoute><Feedback /></ProtectedRoute>} />
     </Routes>
   );
 }

@@ -109,8 +109,10 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     setLoadingSlots(true);
     try {
       const token = localStorage.getItem('auth_token');
+      const user = getUser();
       
-      const url = `${import.meta.env.VITE_API_URL}/appointments/available-slots?date=${formData.scheduleDate}`;
+      // Include user_id to get user-specific slot information
+      const url = `${import.meta.env.VITE_API_URL}/appointments/available-slots?date=${formData.scheduleDate}&user_id=${user?.id || ''}`;
       console.log('🔍 Fetching slots from:', url);
       
       const response = await fetch(url, {
@@ -128,6 +130,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
         console.log('🔴 Full slots:', data.full_slots);
         console.log('✅ Available slots:', data.available_slots);
         console.log('📈 Slot details:', data.slot_details);
+        console.log('⚙️ Limits:', data.limits);
         
         // Check if slot_details exists and has data
         if (!data.slot_details || Object.keys(data.slot_details).length === 0) {
@@ -144,10 +147,13 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
           slotDetails: data.slot_details
         });
         
-        // Clear selected time slot if it's now full
-        if (formData.timeSlot && data.full_slots?.includes(formData.timeSlot)) {
-          setFormData(prev => ({ ...prev, timeSlot: '' }));
-          toast.warning("Selected time slot is now full. Please choose another slot.");
+        // Clear selected time slot if user can't book it anymore
+        if (formData.timeSlot) {
+          const slotInfo = data.slot_details[formData.timeSlot];
+          if (slotInfo && !slotInfo.user_can_book) {
+            setFormData(prev => ({ ...prev, timeSlot: '' }));
+            toast.warning(`You've reached the maximum of ${slotInfo.max_transactions_per_user} transactions for this time slot. Please choose another slot.`);
+          }
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -169,9 +175,23 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
 
   // Get slot availability info
   const getSlotInfo = (timeSlot) => {
-    const info = slotDetails[timeSlot] || { total: 5, booked: 0, available: 5 };
+    const info = slotDetails[timeSlot] || { 
+      total_user_slots: 5, 
+      booked_users: 0, 
+      available_user_slots: 5,
+      user_transactions: 0,
+      user_can_book: true,
+      max_transactions_per_user: 3
+    };
     // console.log(`Slot ${timeSlot} info:`, info);
-    return info;
+    return {
+      total: info.total_user_slots || info.total || 5,
+      booked: info.booked_users || info.booked || 0,
+      available: info.available_user_slots || info.available || 5,
+      userTransactions: info.user_transactions || 0,
+      userCanBook: info.user_can_book !== undefined ? info.user_can_book : true,
+      maxPerUser: info.max_transactions_per_user || 3
+    };
   };
 
   // Get today's date in YYYY-MM-DD format for min attribute
@@ -499,11 +519,18 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                       {formData.scheduleDate && (
                         <div className="text-xs mt-1 font-normal">
                           {isAvailable ? (
-                            <span className={slotInfo.available <= 2 ? 'text-orange-500 font-semibold' : isSelected ? 'text-white' : 'text-gray-500'}>
-                              {slotInfo.available}/{slotInfo.total}
-                            </span>
+                            <>
+                              <span className={slotInfo.available <= 2 ? 'text-orange-500 font-semibold' : isSelected ? 'text-white' : 'text-gray-500'}>
+                                {slotInfo.available}/{slotInfo.total} users
+                              </span>
+                              {slotInfo.userTransactions > 0 && (
+                                <div className={isSelected ? 'text-white opacity-90' : 'text-blue-600'}>
+                                  You: {slotInfo.userTransactions}/{slotInfo.maxPerUser}
+                                </div>
+                              )}
+                            </>
                           ) : (
-                            <span className="text-red-600 font-semibold">0/5</span>
+                            <span className="text-red-600 font-semibold">Full</span>
                           )}
                         </div>
                       )}
