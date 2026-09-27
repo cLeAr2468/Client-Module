@@ -35,8 +35,7 @@ export default function GiveFeedbackDialog({ open, onOpenChange, transaction, on
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          transaction_purpose: transaction.purpose,
-          transaction_date: transaction.schedule_date,
+          transaction_id: transaction.id,
           rating: rating,
           message: message.trim(),
         }),
