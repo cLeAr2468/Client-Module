@@ -69,7 +69,7 @@ function Login() {
       }
       
       // Show success message
-      toast.success(`Welcome back, ${response.user.fname}!`);
+      toast.success(`Welcome, ${response.user.fname}!`);
       
       // Navigate to dashboard
       navigate("/dashboard");

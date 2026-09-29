@@ -23,7 +23,7 @@ export default function ViewFeedbackDialog({ open, onOpenChange, transactionId }
   const fetchFeedback = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const response = await fetch(`${API_BASE_URL}/transaction/${transactionId}/feedback-status`, {
         headers: {
           'Authorization': `Bearer ${token}`,

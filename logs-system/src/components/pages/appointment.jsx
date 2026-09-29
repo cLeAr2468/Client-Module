@@ -81,7 +81,7 @@ export default function Appointments() {
     await Promise.all(
       completedTransactions.map(async (transaction) => {
         try {
-          const token = localStorage.getItem('token');
+          const token = localStorage.getItem('auth_token');
           const response = await fetch(`${API_BASE_URL}/transaction/${transaction.id}/feedback-status`, {
             headers: {
               'Authorization': `Bearer ${token}`,

@@ -26,7 +26,7 @@ export default function GiveFeedbackDialog({ open, onOpenChange, transaction, on
 
     try {
       setSubmitting(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       
       const response = await fetch(`${API_BASE_URL}/feedback`, {
         method: 'POST',
