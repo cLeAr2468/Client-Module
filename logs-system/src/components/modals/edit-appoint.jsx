@@ -15,9 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, XCircle } from "lucide-react";
 import { updateAppointment } from "@/api/appointmentApi";
 import { toast } from "sonner";
+import { autoCapitalize, validateTextInput } from "@/utils/validation";
 
 export default function EditAppointmentDialog({ open, onOpenChange, initialData = null, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -100,7 +101,14 @@ export default function EditAppointmentDialog({ open, onOpenChange, initialData 
   }, [open, initialData]);
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    let processedValue = value;
+    
+    // Apply auto-capitalization to address fields
+    if (["barangay", "city", "province"].includes(field)) {
+      processedValue = autoCapitalize(value);
+    }
+    
+    setFormData((prev) => ({ ...prev, [field]: processedValue }));
     setError(""); // Clear error when user types
   };
 

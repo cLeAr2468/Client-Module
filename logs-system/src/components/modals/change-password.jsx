@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Lock, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, Lock, CheckCircle2, XCircle } from "lucide-react";
 import { changePassword } from "@/api/profileApi";
 import { toast } from "sonner";
 import { showErrorToast, getErrorMessage } from "@/utils/errorHandler";
+import { validatePassword, getPasswordStrengthColor } from "@/utils/validation";
 
 export default function ChangePasswordDialog({ open, onOpenChange }) {
   const [formData, setFormData] = useState({
@@ -30,6 +31,15 @@ export default function ChangePasswordDialog({ open, onOpenChange }) {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Password validation
+  const passwordValidation = useMemo(() => {
+    if (!formData.newPassword) return null;
+    return validatePassword(formData.newPassword);
+  }, [formData.newPassword]);
+
+  const passwordsMatch = formData.newPassword && formData.confirmPassword && 
+    formData.newPassword === formData.confirmPassword;
+
   const togglePasswordVisibility = (field) => {
     setShowPasswords(prev => ({
       ...prev,
@@ -46,8 +56,8 @@ export default function ChangePasswordDialog({ open, onOpenChange }) {
 
     if (!formData.newPassword) {
       newErrors.newPassword = "New password is required";
-    } else if (formData.newPassword.length < 6) {
-      newErrors.newPassword = "Password must be at least 6 characters";
+    } else if (!passwordValidation || !passwordValidation.isValid) {
+      newErrors.newPassword = "Password does not meet all requirements";
     }
 
     if (!formData.confirmPassword) {
@@ -196,7 +206,7 @@ export default function ChangePasswordDialog({ open, onOpenChange }) {
                 value={formData.newPassword}
                 onChange={(e) => handleInputChange("newPassword", e.target.value)}
                 className={`pr-10 ${errors.newPassword ? 'border-red-500' : ''}`}
-                placeholder="Enter new password (min. 6 characters)"
+                placeholder="Enter new password"
                 disabled={loading}
               />
               <button
@@ -212,8 +222,59 @@ export default function ChangePasswordDialog({ open, onOpenChange }) {
                 )}
               </button>
             </div>
+            
+            {/* Password strength indicator */}
+            {passwordValidation && formData.newPassword && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-1 gap-1">
+                    {[1, 2, 3, 4, 5].map((item) => (
+                      <div
+                        key={item}
+                        className={`h-1.5 flex-1 rounded-full transition-colors ${
+                          passwordValidation.score >= item
+                            ? getPasswordStrengthColor(passwordValidation.strength).split(" ")[1]
+                            : "bg-gray-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className={`text-xs font-semibold ${getPasswordStrengthColor(passwordValidation.strength).split(" ")[0]}`}>
+                    {passwordValidation.strength}
+                  </span>
+                </div>
+
+                {/* Password requirements checklist */}
+                <div className="text-xs space-y-1 bg-gray-50 p-2 rounded border">
+                  <div className={`flex items-center gap-1.5 ${passwordValidation.rules.hasMinLength ? "text-green-700" : "text-gray-500"}`}>
+                    {passwordValidation.rules.hasMinLength ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                    <span>At least 8 characters</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 ${passwordValidation.rules.hasUppercase ? "text-green-700" : "text-gray-500"}`}>
+                    {passwordValidation.rules.hasUppercase ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                    <span>One uppercase letter</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 ${passwordValidation.rules.hasLowercase ? "text-green-700" : "text-gray-500"}`}>
+                    {passwordValidation.rules.hasLowercase ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                    <span>One lowercase letter</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 ${passwordValidation.rules.hasNumber ? "text-green-700" : "text-gray-500"}`}>
+                    {passwordValidation.rules.hasNumber ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                    <span>One number</span>
+                  </div>
+                  <div className={`flex items-center gap-1.5 ${passwordValidation.rules.hasSpecialChar ? "text-green-700" : "text-gray-500"}`}>
+                    {passwordValidation.rules.hasSpecialChar ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                    <span>One special character</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {errors.newPassword && (
-              <p className="text-sm text-red-600">{errors.newPassword}</p>
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <XCircle size={14} />
+                {errors.newPassword}
+              </p>
             )}
           </div>
 
@@ -226,36 +287,49 @@ export default function ChangePasswordDialog({ open, onOpenChange }) {
                 type={showPasswords.confirm ? "text" : "password"}
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                className={`pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                className={`pr-10 ${
+                  errors.confirmPassword 
+                    ? 'border-red-500' 
+                    : passwordsMatch 
+                    ? 'border-green-500' 
+                    : ''
+                }`}
                 placeholder="Confirm new password"
                 disabled={loading}
               />
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility("confirm")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                disabled={loading}
-              >
-                {showPasswords.confirm ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {passwordsMatch && (
+                  <CheckCircle2 size={16} className="text-green-700" />
                 )}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("confirm")}
+                  className="text-gray-500 hover:text-gray-700"
+                  disabled={loading}
+                >
+                  {showPasswords.confirm ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
+            {passwordsMatch && (
+              <p className="text-xs text-green-700 flex items-center gap-1">
+                <CheckCircle2 size={12} />
+                Passwords match
+              </p>
+            )}
             {errors.confirmPassword && (
-              <p className="text-sm text-red-600">{errors.confirmPassword}</p>
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <XCircle size={14} />
+                {errors.confirmPassword}
+              </p>
             )}
           </div>
 
-          {/* Password Requirements */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-xs text-blue-800 font-medium mb-1">Password Requirements:</p>
-            <ul className="text-xs text-blue-700 space-y-0.5 list-disc list-inside">
-              <li>At least 6 characters long</li>
-              <li>Must be different from current password</li>
-            </ul>
-          </div>
+          {/* Password Requirements removed - now shown inline above */}
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button

@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Image1 from "@/assets/login.png";
 import Image2 from "@/assets/nwssu 1.png";
 import { useState, useEffect } from "react";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, XCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import ForgotPass from "@/components/modals/forgot-pass";
 import VerifyOtpDialog from "@/components/modals/otp-dialog";
@@ -13,6 +13,7 @@ import CreateNewPasswordDialog from "@/components/modals/new-password";
 import { login, forgotPassword, verifyOtp, resendOtp, resetPassword } from "@/api/authApi";
 import { toast } from "sonner";
 import { setSession, isSessionActive } from "@/utils/session";
+import { validateEmail } from "@/utils/validation";
 
 function Login() {
   const navigate = useNavigate();
@@ -48,8 +49,18 @@ function Login() {
       return;
     }
 
+    if (!validateEmail(loginEmail)) {
+      setLoginError("Please enter a valid email address");
+      return;
+    }
+
     if (!loginPassword) {
       setLoginError("Please enter your password");
+      return;
+    }
+
+    if (loginPassword.length < 6) {
+      setLoginError("Password must be at least 6 characters");
       return;
     }
 
@@ -295,12 +306,21 @@ function Login() {
                 <Input
                   type="email"
                   placeholder="Enter Email"
-                  className="h-10 pl-10"
+                  className={`h-10 pl-10 ${loginError && !validateEmail(loginEmail) && loginEmail ? "border-red-500" : ""}`}
                   value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
+                  onChange={(e) => {
+                    setLoginEmail(e.target.value);
+                    if (loginError) setLoginError("");
+                  }}
                   disabled={loading}
                 />
               </div>
+              {loginEmail && !validateEmail(loginEmail) && (
+                <p className="text-xs text-yellow-600 mt-1 flex items-center gap-1">
+                  <XCircle size={12} />
+                  Please enter a valid email format
+                </p>
+              )}
             </div>
 
             {/* Password Field - Mobile */}
@@ -464,12 +484,21 @@ function Login() {
                   <Input
                     type="email"
                     placeholder="Enter Email"
-                    className="h-11 pl-10"
+                    className={`h-11 pl-10 ${loginError && !validateEmail(loginEmail) && loginEmail ? "border-red-500" : ""}`}
                     value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
+                    onChange={(e) => {
+                      setLoginEmail(e.target.value);
+                      if (loginError) setLoginError("");
+                    }}
                     disabled={loading}
                   />
                 </div>
+                {loginEmail && !validateEmail(loginEmail) && (
+                  <p className="text-xs text-yellow-600 mt-1 flex items-center gap-1">
+                    <XCircle size={12} />
+                    Please enter a valid email format
+                  </p>
+                )}
               </div>
 
               {/* Password Field - Desktop */}
