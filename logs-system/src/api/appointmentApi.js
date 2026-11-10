@@ -1,44 +1,4 @@
-import axios from 'axios';
-
-// Configure base URL - reads from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://logs-server-system-production.up.railway.app/api';
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-});
-
-// Add token to every request automatically
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Handle 401 Unauthorized responses
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
+import api from './api';
 
 // ==================== APPOINTMENT APIs ====================
 

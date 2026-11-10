@@ -1,26 +1,4 @@
-import axios from 'axios';
-import { getApiBaseUrl } from '@/utils/apiConfig';
-
-// Get dynamic API base URL (supports server switching)
-const API_BASE_URL = getApiBaseUrl();
-
-console.log('📡 Auth API Base URL:', API_BASE_URL);
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  },
-  timeout: 30000, // 30 second timeout
-});
-
-// Listen for server changes and update axios baseURL
-window.addEventListener('serverChanged', (event) => {
-  api.defaults.baseURL = event.detail.url;
-  console.log('🔄 Auth API base URL updated to:', event.detail.url);
-});
+import api from './api';
 
 // ==================== AUTH APIs ====================
 
@@ -48,7 +26,6 @@ export const login = async (email, password) => {
   try {
     console.log('🔐 Login attempt:', { 
       email, 
-      url: `${API_BASE_URL}/login`,
       timestamp: new Date().toISOString()
     });
     
