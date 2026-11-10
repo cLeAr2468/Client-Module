@@ -1,9 +1,10 @@
 import axios from 'axios';
+import { getApiBaseUrl } from '@/utils/apiConfig';
 
-// Configure base URL - reads from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://logs-server-system-production.up.railway.app/api';
+// Get dynamic API base URL (supports server switching)
+const API_BASE_URL = getApiBaseUrl();
 
-console.log('📡 API Base URL:', API_BASE_URL);
+console.log('📡 Auth API Base URL:', API_BASE_URL);
 
 // Create axios instance with default config
 const api = axios.create({
@@ -13,6 +14,12 @@ const api = axios.create({
     'Accept': 'application/json',
   },
   timeout: 30000, // 30 second timeout
+});
+
+// Listen for server changes and update axios baseURL
+window.addEventListener('serverChanged', (event) => {
+  api.defaults.baseURL = event.detail.url;
+  console.log('🔄 Auth API base URL updated to:', event.detail.url);
 });
 
 // ==================== AUTH APIs ====================
