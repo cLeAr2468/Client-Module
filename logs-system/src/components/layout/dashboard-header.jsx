@@ -24,6 +24,7 @@ import {
   AvatarFallback,
 } from "@/components/ui/avatar";
 import ChangePass from "@/components/modals/change-pass";
+import ServerSwitcher from "@/components/common/ServerSwitcher";
 import { logout } from "@/utils/auth";
 import { toast } from "sonner";
 import { getProfile } from "@/api/profileApi";
@@ -296,6 +297,9 @@ export default function DashboardHeader() {
                 <span>Transaction History</span>
               </Link>
             </nav>
+
+            {/* Server Switcher */}
+            <ServerSwitcher />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
