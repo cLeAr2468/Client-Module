@@ -198,6 +198,7 @@ const Transactions = () => {
                             <TableHead>Schedule Date</TableHead>
                             <TableHead>Time Slot</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Reason</TableHead>
                           </TableRow>
                         </TableHeader>
 
@@ -206,9 +207,9 @@ const Transactions = () => {
                             currentTransactions.map((item) => (
                               <TableRow key={item.id}>
                                 <TableCell>{formatDate(item.created_at)}</TableCell>
-                                <TableCell>{item.purpose}</TableCell>
+                                <TableCell>{item.purpose?.name || 'N/A'}</TableCell>
                                 <TableCell>
-                                  {item.brgy}, {item.municipality}
+                                  {item.user?.barangay || 'N/A'}, {item.user?.municipality || 'N/A'}
                                 </TableCell>
                                 <TableCell>{formatDate(item.schedule_date)}</TableCell>
                                 <TableCell>{item.time_slot}</TableCell>
@@ -217,12 +218,19 @@ const Transactions = () => {
                                     {getDisplayStatus(item.status)}
                                   </Badge>
                                 </TableCell>
+                                <TableCell>
+                                  {(item.status === 'rejected' || item.status === 'cancelled') && item.rejection_reason ? (
+                                    <span className="text-sm text-red-600">{item.rejection_reason}</span>
+                                  ) : (
+                                    <span className="text-gray-400">-</span>
+                                  )}
+                                </TableCell>
                               </TableRow>
                             ))
                           ) : (
                             <TableRow>
                               <TableCell
-                                colSpan={6}
+                                colSpan={7}
                                 className="text-center py-8 text-gray-500"
                               >
                                 {filter === "All"
@@ -311,14 +319,14 @@ const Transactions = () => {
                               <p className="text-xs text-gray-500 uppercase">
                                 Purpose
                               </p>
-                              <p className="font-medium">{item.purpose}</p>
+                              <p className="font-medium">{item.purpose?.name || 'N/A'}</p>
                             </div>
 
                             <div>
                               <p className="text-xs text-gray-500 uppercase">
                                 Address
                               </p>
-                              <p>{item.street_house_no}, {item.brgy}, {item.municipality}, {item.province}</p>
+                              <p>{item.user?.barangay || 'N/A'}, {item.user?.municipality || 'N/A'}, {item.user?.province || 'N/A'}</p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
@@ -335,6 +343,16 @@ const Transactions = () => {
                                 <p>{item.time_slot}</p>
                               </div>
                             </div>
+
+                            {/* Show rejection/cancellation reason */}
+                            {(item.status === 'rejected' || item.status === 'cancelled') && item.rejection_reason && (
+                              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-xs text-red-700 uppercase font-semibold mb-1">
+                                  {item.status === 'rejected' ? 'Rejection Reason' : 'Cancellation Reason'}
+                                </p>
+                                <p className="text-sm text-red-800">{item.rejection_reason}</p>
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>

@@ -4,16 +4,12 @@ import { Loader2 } from "lucide-react";
 import Header from "@/components/layout/header";
 import BackgroundLayout from "@/components/layout/background-layout";
 import { getPublishedAnnouncements } from "@/api/announcementApi";
+import { getApiBaseUrl } from "@/utils/apiConfig";
 import { toast } from "sonner";
 
 export default function AnnouncementPage() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Get the API base URL
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "https://logs-server-system-production.up.railway.app/api";
-  // Extract the base URL without /api for storage
-  const STORAGE_BASE_URL = API_BASE_URL.replace('/api', '');
 
   useEffect(() => {
     fetchAnnouncements();
@@ -25,6 +21,10 @@ export default function AnnouncementPage() {
       const response = await getPublishedAnnouncements();
       const fetchedAnnouncements = response.data || [];
       setAnnouncements(fetchedAnnouncements);
+      
+      // Get the API base URL and extract storage base URL
+      const API_BASE_URL = getApiBaseUrl();
+      const STORAGE_BASE_URL = API_BASE_URL.replace('/api', '');
       
       // Debug: Log all announcement image paths
       console.log('=== ANNOUNCEMENT DEBUG INFO ===');
@@ -95,7 +95,9 @@ export default function AnnouncementPage() {
                 </CardContent>
               </Card>
             ) : (
-              announcements.map((announcement) => (
+              announcements.map((announcement) => {
+                const STORAGE_BASE_URL = getApiBaseUrl().replace('/api', '');
+                return (
                 <Card
                   key={announcement.id}
                   className="border border-white/40 bg-green-900/90 shadow-2xl backdrop-blur-sm"
@@ -145,7 +147,8 @@ export default function AnnouncementPage() {
                     </p>
                   </CardContent>
                 </Card>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -188,7 +191,9 @@ export default function AnnouncementPage() {
                 </CardContent>
               </Card>
             ) : (
-              announcements.map((announcement) => (
+              announcements.map((announcement) => {
+                const STORAGE_BASE_URL = getApiBaseUrl().replace('/api', '');
+                return (
                 <Card
                   key={announcement.id}
                   className="border border-white/40 bg-green-900/90 shadow-2xl backdrop-blur-sm"
@@ -238,7 +243,8 @@ export default function AnnouncementPage() {
                     </p>
                   </CardContent>
                 </Card>
-              ))
+                );
+              })
             )}
           </div>
         </div>

@@ -120,7 +120,7 @@ export default function ProfileDisplay() {
                                     </Avatar>
 
                                     <h2 className="mt-4 text-2xl font-bold text-center">
-                                        {user.firstname} {user.middlename} {user.lastname}
+                                        {user.firstname} {user.middlename && !/^N\.?A\.?$/i.test(user.middlename.trim()) && user.middlename} {user.lastname}
                                     </h2>
 
 
@@ -174,9 +174,19 @@ export default function ProfileDisplay() {
                                                     value={user.email}
                                                 />
                                                 <Info
+                                                    icon={<User size={18} />}
+                                                    label="Suffix"
+                                                    value={user.suffix || "None"}
+                                                />
+                                                <Info
                                                     icon={<MapPin size={18} />}
-                                                    label="Barangay"
-                                                    value={user.barangay || "Not provided"}
+                                                    label="Region"
+                                                    value={user.region || "Not provided"}
+                                                />
+                                                <Info
+                                                    icon={<MapPin size={18} />}
+                                                    label="Province"
+                                                    value={user.province || "Not provided"}
                                                 />
                                                 <Info
                                                     icon={<MapPin size={18} />}
@@ -185,8 +195,13 @@ export default function ProfileDisplay() {
                                                 />
                                                 <Info
                                                     icon={<MapPin size={18} />}
-                                                    label="Province"
-                                                    value={user.province || "Not provided"}
+                                                    label="Barangay"
+                                                    value={user.barangay || "Not provided"}
+                                                />
+                                                <Info
+                                                    icon={<MapPin size={18} />}
+                                                    label="Purok/Street"
+                                                    value={user.purok || "Not provided"}
                                                 />
 
                                             </div>
@@ -209,7 +224,7 @@ export default function ProfileDisplay() {
                                 <Avatar className="w-32 h-32 border-4 border-white shadow-lg">
                                     <AvatarImage
                                         src={user.profile}
-                                        alt={`${user.firstname} ${user.middlename} ${user.lastname}`}
+                                        alt={`${user.firstname} ${user.middlename && !/^N\.?A\.?$/i.test(user.middlename.trim()) ? user.middlename : ''} ${user.lastname}`}
                                     />
 
                                     <AvatarFallback className="bg-green-700 text-white text-4xl font-bold w-full">
@@ -218,7 +233,7 @@ export default function ProfileDisplay() {
                                 </Avatar>
 
                                 <h2 className="mt-4 text-xl font-bold text-center">
-                                    {user.firstname} {user.middlename} {user.lastname}
+                                    {user.firstname} {user.middlename && !/^N\.?A\.?$/i.test(user.middlename.trim()) && user.middlename} {user.lastname}
                                 </h2>
 
                                 <Badge className="mt-3 bg-green-100 text-green-700">{user.status}</Badge>
@@ -265,9 +280,19 @@ export default function ProfileDisplay() {
                                         value={user.email}
                                     />
                                     <Info
+                                        icon={<User size={18} />}
+                                        label="Suffix"
+                                        value={user.suffix || "None"}
+                                    />
+                                    <Info
                                         icon={<MapPin size={18} />}
-                                        label="Barangay"
-                                        value={user.barangay || "Not provided"}
+                                        label="Region"
+                                        value={user.region || "Not provided"}
+                                    />
+                                    <Info
+                                        icon={<MapPin size={18} />}
+                                        label="Province"
+                                        value={user.province || "Not provided"}
                                     />
                                     <Info
                                         icon={<MapPin size={18} />}
@@ -276,8 +301,13 @@ export default function ProfileDisplay() {
                                     />
                                     <Info
                                         icon={<MapPin size={18} />}
-                                        label="Province"
-                                        value={user.province || "Not provided"}
+                                        label="Barangay"
+                                        value={user.barangay || "Not provided"}
+                                    />
+                                    <Info
+                                        icon={<MapPin size={18} />}
+                                        label="Purok/Street"
+                                        value={user.purok || "Not provided"}
                                     />
         
                                 </div>

@@ -7,12 +7,11 @@ import {
 } from "@/components/ui/dialog";
 import { Star, Calendar, MessageSquare, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { getApiBaseUrl } from "@/utils/apiConfig";
 
 export default function ViewFeedbackDialog({ open, onOpenChange, transactionId }) {
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://logs-server-system-production.up.railway.app/api';
 
   useEffect(() => {
     if (open && transactionId) {
@@ -24,6 +23,7 @@ export default function ViewFeedbackDialog({ open, onOpenChange, transactionId }
     setLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
+      const API_BASE_URL = getApiBaseUrl(); // Use centralized API config
       const response = await fetch(`${API_BASE_URL}/transaction/${transactionId}/feedback-status`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -31,8 +31,13 @@ export default function ViewFeedbackDialog({ open, onOpenChange, transactionId }
         }
       });
 
+      if (!response.ok) {
+        console.error(`Failed to fetch feedback: ${response.status}`);
+        return;
+      }
+
       const data = await response.json();
-      if (response.ok && data.feedback) {
+      if (data.feedback) {
         setFeedback(data.feedback);
       }
     } catch (err) {

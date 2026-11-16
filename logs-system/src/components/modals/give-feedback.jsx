@@ -4,14 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, Send, X } from "lucide-react";
 import { toast } from "sonner";
+import { getApiBaseUrl } from "@/utils/apiConfig";
 
 export default function GiveFeedbackDialog({ open, onOpenChange, transaction, onSubmitSuccess }) {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://logs-server-system-production.up.railway.app/api';
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -27,6 +26,7 @@ export default function GiveFeedbackDialog({ open, onOpenChange, transaction, on
     try {
       setSubmitting(true);
       const token = localStorage.getItem('auth_token');
+      const API_BASE_URL = getApiBaseUrl(); // Use centralized API config
       
       const response = await fetch(`${API_BASE_URL}/feedback`, {
         method: 'POST',
@@ -94,7 +94,9 @@ export default function GiveFeedbackDialog({ open, onOpenChange, transaction, on
             <div className="grid grid-cols-1 gap-2 text-sm">
               <div>
                 <span className="text-gray-600">Purpose:</span>
-                <span className="ml-2 font-medium text-gray-900">{transaction.purpose}</span>
+                <span className="ml-2 font-medium text-gray-900">
+                  {transaction.purpose?.name || transaction.purpose || 'N/A'}
+                </span>
               </div>
               <div>
                 <span className="text-gray-600">Date:</span>

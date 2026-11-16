@@ -16,12 +16,26 @@ import NewAppointmentDialog from "@/components/modals/new-appointment";
 import EditAppointmentDialog from "@/components/modals/edit-appoint";
 import ViewFeedbackDialog from "@/components/modals/view-feedback";
 import GiveFeedbackDialog from "@/components/modals/give-feedback";
+import CancelAppointmentDialog from "@/components/modals/cancel-appointment";
 import Pagination from "@/components/ui/pagination";
-import { Plus, Edit, RefreshCw, Filter, MessageSquare, Star } from "lucide-react";
+import { 
+  Plus, 
+  RefreshCw, 
+  Filter, 
+  MoreVertical,
+  Eye,
+  Edit,
+  XCircle,
+  MessageSquare,
+  Star,
+  Globe,
+  MapPinIcon
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import { getUserAppointments, cancelAppointment } from "@/api/appointmentApi";
 import { getAllPurposes } from "@/api/purposeApi";
 import { ActivityLogger } from "@/api/activityLogApi";
-import { getUser } from "@/utils/auth";
+import { getApiBaseUrl } from "@/utils/apiConfig";
 import { toast } from "sonner";
 import {
   Select,
@@ -30,27 +44,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Appointments() {
   const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
   const [isEditAppointmentOpen, setIsEditAppointmentOpen] = useState(false);
   const [isViewFeedbackOpen, setIsViewFeedbackOpen] = useState(false);
   const [isGiveFeedbackOpen, setIsGiveFeedbackOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [selectedTransactionId, setSelectedTransactionId] = useState(null);
+  const [appointmentToCancel, setAppointmentToCancel] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [transactionFeedbacks, setTransactionFeedbacks] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState("Pending");
+  const [filter, setFilter] = useState("All");
   const [searchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [purposeFilter, setPurposeFilter] = useState("All Purposes");
   const [purposes, setPurposes] = useState([]);
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://logs-server-system-production.up.railway.app/api';
 
   // Fetch appointments
   const fetchAppointments = async () => {
@@ -82,12 +102,20 @@ export default function Appointments() {
       completedTransactions.map(async (transaction) => {
         try {
           const token = localStorage.getItem('auth_token');
+          const API_BASE_URL = getApiBaseUrl(); // Use centralized API config
           const response = await fetch(`${API_BASE_URL}/transaction/${transaction.id}/feedback-status`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
             }
           });
+          
+          if (!response.ok) {
+            console.error(`Failed to fetch feedback status for transaction ${transaction.id}: ${response.status}`);
+            feedbackMap[transaction.id] = false;
+            return;
+          }
+          
           const data = await response.json();
           feedbackMap[transaction.id] = data.has_feedback;
         } catch (err) {
@@ -135,13 +163,10 @@ export default function Appointments() {
     fetchAppointments();
   };
 
-  const handleCancelAppointment = async (appointmentId) => {
-    if (!confirm("Are you sure you want to cancel this appointment?")) {
-      return;
-    }
-
+  const handleCancelAppointment = async (appointmentId, reason) => {
     try {
-      const response = await cancelAppointment(appointmentId);
+      // Call API with cancellation reason
+      const response = await cancelAppointment(appointmentId, reason);
       console.log("✅ Appointment cancelled:", response);
       toast.success(response.message || "Appointment cancelled successfully");
       // Log appointment cancellation
@@ -150,8 +175,13 @@ export default function Appointments() {
       fetchAppointments();
     } catch (err) {
       console.error("❌ Error cancelling appointment:", err);
-      toast.error(err.message || "Failed to cancel appointment");
+      throw err; // Re-throw so dialog can handle it
     }
+  };
+
+  const openCancelDialog = (appointment) => {
+    setAppointmentToCancel(appointment);
+    setIsCancelDialogOpen(true);
   };
 
   const formatDate = (dateString) => {
@@ -192,24 +222,10 @@ export default function Appointments() {
         return "bg-green-100 text-green-700 hover:bg-green-100";
       case "Cancelled":
         return "bg-gray-100 text-gray-700 hover:bg-gray-100";
-      case "rejected":
+      case "Rejected":
         return "bg-red-100 text-red-800 hover:bg-red-100";
       default:
         return "bg-gray-100 text-gray-700";
-    }
-  };
-
-  const getFilterButtonClass = (status) => {
-    if (filter !== status) return "";
-    switch (status) {
-      case "Pending":
-        return "bg-red-600 hover:bg-red-700 text-white";
-      case "Approved":
-        return "bg-blue-600 hover:bg-blue-700 text-white";
-      case "Completed":
-        return "bg-green-600 hover:bg-green-700 text-white";
-      default:
-        return "bg-[#15592F] hover:bg-[#124b28] text-white";
     }
   };
 
@@ -217,20 +233,16 @@ export default function Appointments() {
     // Map backend status to display status
     const displayStatus = getDisplayStatus(item.status);
     
-    // Only show Pending, Approved, and Completed transactions
-    if (displayStatus !== "Pending" && displayStatus !== "Approved" && displayStatus !== "Completed") {
-      return false;
-    }
+    // Filter by status
+    const statusMatch = filter === "All" || displayStatus === filter;
     
-    const statusMatch = displayStatus === filter;
-    
-    // Purpose filter
-    const purposeMatch = purposeFilter === "All Purposes" || item.purpose === purposeFilter;
+    // Purpose filter - PURE RELATIONSHIP: item.purpose.name
+    const purposeName = item.purpose?.name || '';
+    const purposeMatch = purposeFilter === "All Purposes" || purposeName === purposeFilter;
     
     const searchMatch =
       searchQuery === "" ||
-      item.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.street_house_no && item.street_house_no.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      purposeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.brgy && item.brgy.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.municipality && item.municipality.toLowerCase().includes(searchQuery.toLowerCase()));
     
@@ -253,26 +265,13 @@ export default function Appointments() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const renderFilterButtons = () =>
-    ["Pending", "Approved", "Completed"].map((status) => (
-      <Button
-        key={status}
-        variant={filter === status ? "default" : "outline"}
-        onClick={() => setFilter(status)}
-        className={getFilterButtonClass(status)}
-      >
-        {status}
-      </Button>
-    ));
-
   return (
     <BackgroundLayout overlayColor="bg-green-950/70">
       <DashboardHeader />
       <div className="flex min-h-screen w-full">
         <main className="flex-1 overflow-auto">
           <div className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between mb-8" />
-
+            {/* Desktop View */}
             <div className="hidden md:block">
               <h2 className="text-2xl font-semibold text-white mb-6">
                 Appointment Records
@@ -287,7 +286,18 @@ export default function Appointments() {
 
               <div className="flex gap-4 mb-6 justify-between">
                 <div className="flex gap-2 flex-wrap items-center">
-                  {renderFilterButtons()}
+                  {/* Status Filter as Select */}
+                  <Select value={filter} onValueChange={setFilter}>
+                    <SelectTrigger className="w-[160px] h-10 bg-white">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Status</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Approved">Approved</SelectItem>
+                      <SelectItem value="Completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
                   
                   {/* Purpose Filter Dropdown */}
                   <div className="flex items-center gap-2">
@@ -341,18 +351,14 @@ export default function Appointments() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Request Date</TableHead>
+                            <TableHead>Transaction #</TableHead>
+                            <TableHead>Date Requested</TableHead>
                             <TableHead>Purpose</TableHead>
-                            <TableHead>Address</TableHead>
-                            <TableHead>Schedule Date</TableHead>
+                            <TableHead>Appointment Date</TableHead>
                             <TableHead>Time Slot</TableHead>
+                            <TableHead>Request Type</TableHead>
                             <TableHead>Status</TableHead>
-                            {filter !== "Completed" && (
-                              <TableHead className="text-right">Actions</TableHead>
-                            )}
-                            {filter === "Completed" && (
-                              <TableHead className="text-center">Feedback</TableHead>
-                            )}
+                            <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
 
@@ -360,89 +366,105 @@ export default function Appointments() {
                           {currentTransactions.length > 0 ? (
                             currentTransactions.map((item) => (
                               <TableRow key={item.id}>
-                                <TableCell>{formatDate(item.created_at)}</TableCell>
-                                <TableCell>{item.purpose}</TableCell>
-                                <TableCell>
-                                  {item.brgy}, {item.municipality}
-                                </TableCell>
+                                <TableCell className="font-medium">#{item.id}</TableCell>
+                                <TableCell>{formatDate(item.date_requested || item.created_at)}</TableCell>
+                                <TableCell>{item.purpose?.name || 'N/A'}</TableCell>
                                 <TableCell>{formatDate(item.schedule_date)}</TableCell>
-                                <TableCell>{item.time_slot}</TableCell>
+                                <TableCell>{item.time_slot || 'N/A'}</TableCell>
+                                <TableCell>
+                                  <Badge className={item.request_type === 'online' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}>
+                                    {item.request_type === 'online' ? (
+                                      <>Online</>
+                                    ) : (
+                                      <>Walk-in</>
+                                    )}
+                                  </Badge>
+                                </TableCell>
                                 <TableCell>
                                   <Badge className={getStatusColor(item.status)}>
                                     {getDisplayStatus(item.status)}
                                   </Badge>
                                 </TableCell>
-                                {filter !== "Completed" && (
-                                  <TableCell className="text-right">
-                                    {(item.status === "pending" || item.status === "approved") && (
-                                      <div className="flex justify-end items-center gap-2">
-                                        {item.status === "pending" && (
-                                          <>
-                                            <Button
+                                <TableCell className="text-right">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                        <MoreVertical className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem asChild>
+                                        <Link
+                                          to={`/appointment/${item.id}`}
+                                          className="flex items-center cursor-pointer"
+                                        >
+                                          <Eye className="h-4 w-4 mr-2" />
+                                          View Details
+                                        </Link>
+                                      </DropdownMenuItem>
+                                      
+                                      {item.status === "pending" && (
+                                        <>
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              setSelectedAppointment(item);
+                                              setIsEditAppointmentOpen(true);
+                                            }}
+                                            className="cursor-pointer"
+                                          >
+                                            <Edit className="h-4 w-4 mr-2" />
+                                            Edit
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() => openCancelDialog(item)}
+                                            className="cursor-pointer text-red-600"
+                                          >
+                                            <XCircle className="h-4 w-4 mr-2" />
+                                            Cancel
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                      
+                                      {item.status === "completed" && (
+                                        <>
+                                          {transactionFeedbacks[item.id] ? (
+                                            <DropdownMenuItem
                                               onClick={() => {
-                                                setSelectedAppointment(item);
-                                                setIsEditAppointmentOpen(true);
+                                                setSelectedTransactionId(item.id);
+                                                setIsViewFeedbackOpen(true);
                                               }}
-                                              aria-label="Edit appointment"
-                                              className="h-8 w-8 p-0 rounded-full bg-white hover:bg-[#15592F] hover:text-white flex text-[#15592F] items-center justify-center"
+                                              className="cursor-pointer text-green-600"
                                             >
-                                              <Edit className="h-4 w-4" />
-                                            </Button>
-                                            <Button 
-                                              variant="destructive" 
-                                              className="h-9 px-3" 
-                                              title="Cancel"
-                                              onClick={() => handleCancelAppointment(item.id)}
+                                              <MessageSquare className="h-4 w-4 mr-2" />
+                                              View Feedback
+                                            </DropdownMenuItem>
+                                          ) : (
+                                            <DropdownMenuItem
+                                              onClick={() => {
+                                                setSelectedTransaction(item);
+                                                setIsGiveFeedbackOpen(true);
+                                              }}
+                                              className="cursor-pointer text-blue-600"
                                             >
-                                              Cancel
-                                            </Button>
-                                          </>
-                                        )}
-                                        {item.status === "approved" && (
-                                          <span className="text-sm text-gray-500">In Progress</span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </TableCell>
-                                )}
-                                {filter === "Completed" && (
-                                  <TableCell className="text-center">
-                                    {transactionFeedbacks[item.id] ? (
-                                      <Button
-                                        onClick={() => {
-                                          setSelectedTransactionId(item.id);
-                                          setIsViewFeedbackOpen(true);
-                                        }}
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-green-700 border-green-700 hover:bg-green-50"
-                                      >
-                                        <MessageSquare className="h-4 w-4 mr-2" />
-                                        View Feedback
-                                      </Button>
-                                    ) : (
-                                      <Button
-                                        onClick={() => {
-                                          setSelectedTransaction(item);
-                                          setIsGiveFeedbackOpen(true);
-                                        }}
-                                        size="sm"
-                                        className="bg-[#15592F] hover:bg-[#124b28] text-white"
-                                      >
-                                        <Star className="h-4 w-4 mr-2" />
-                                        Give Feedback
-                                      </Button>
-                                    )}
-                                  </TableCell>
-                                )}
+                                              <Star className="h-4 w-4 mr-2" />
+                                              Give Feedback
+                                            </DropdownMenuItem>
+                                          )}
+                                        </>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </TableCell>
                               </TableRow>
                             ))
                           ) : (
                             <TableRow>
-                              <TableCell colSpan={filter !== "Completed" ? 7 : 6} className="text-center py-8 text-gray-500">
+                              <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                                 {searchQuery 
-                                  ? `No transactions found matching "${searchQuery}" in ${filter} status.` 
-                                  : `No ${filter} appointments found.`
+                                  ? `No transactions found matching "${searchQuery}".` 
+                                  : filter === "All" 
+                                    ? "No appointments found."
+                                    : `No ${filter} appointments found.`
                                 }
                               </TableCell>
                             </TableRow>
@@ -464,6 +486,7 @@ export default function Appointments() {
               </Card>
             </div>
 
+            {/* Mobile View */}
             <div className="block md:hidden">
               <div className="flex flex-col gap-4 mb-6 items-center">
                 <h2 className="text-2xl font-semibold text-white">Appointment Records</h2>
@@ -475,7 +498,18 @@ export default function Appointments() {
                   </div>
                 )}
                 
-                <div className="flex gap-2 justify-center w-full">{renderFilterButtons()}</div>
+                {/* Status Filter */}
+                <Select value={filter} onValueChange={setFilter}>
+                  <SelectTrigger className="w-full h-10 bg-white">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Status</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Approved">Approved</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
                 
                 {/* Purpose Filter Dropdown for Mobile */}
                 <div className="flex items-center gap-2 w-full">
@@ -530,112 +564,128 @@ export default function Appointments() {
                     currentTransactions.map((item) => (
                       <Card key={item.id} className="rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all">
                         <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
+                          <div className="flex justify-between items-start mb-3">
                             <div>
-                              <h3 className="font-semibold text-[#15592F] text-lg">
-                                {formatDate(item.created_at)}
+                              <h3 className="font-semibold text-[#15592F] text-base">
+                                #{item.id} - {formatDate(item.date_requested || item.created_at)}
                               </h3>
-                              <p className="text-xs text-gray-500 mt-1">Request Date</p>
+                              <p className="text-xs text-gray-500 mt-1">Date Requested</p>
                             </div>
-                            <Badge className={getStatusColor(item.status)}>
-                              {getDisplayStatus(item.status)}
-                            </Badge>
+                            <div className="flex gap-2 items-center">
+                              <Badge className={getStatusColor(item.status)}>
+                                {getDisplayStatus(item.status)}
+                              </Badge>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem asChild>
+                                    <Link
+                                      to={`/appointment/${item.id}`}
+                                      className="flex items-center cursor-pointer"
+                                    >
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      View Details
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  
+                                  {item.status === "pending" && (
+                                    <>
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setSelectedAppointment(item);
+                                          setIsEditAppointmentOpen(true);
+                                        }}
+                                        className="cursor-pointer"
+                                      >
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => handleCancelAppointment(item.id)}
+                                        className="cursor-pointer text-red-600"
+                                      >
+                                        <XCircle className="h-4 w-4 mr-2" />
+                                        Cancel
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                  
+                                  {item.status === "completed" && (
+                                    <>
+                                      {transactionFeedbacks[item.id] ? (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setSelectedTransactionId(item.id);
+                                            setIsViewFeedbackOpen(true);
+                                          }}
+                                          className="cursor-pointer text-green-600"
+                                        >
+                                          <MessageSquare className="h-4 w-4 mr-2" />
+                                          View Feedback
+                                        </DropdownMenuItem>
+                                      ) : (
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setSelectedTransaction(item);
+                                            setIsGiveFeedbackOpen(true);
+                                          }}
+                                          className="cursor-pointer text-blue-600"
+                                        >
+                                          <Star className="h-4 w-4 mr-2" />
+                                          Give Feedback
+                                        </DropdownMenuItem>
+                                      )}
+                                    </>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
 
-                          <div className="border-t my-4"></div>
+                          <div className="border-t my-3"></div>
 
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             <div>
                               <p className="text-xs text-gray-500 uppercase">Purpose</p>
-                              <p className="font-medium">{item.purpose}</p>
+                              <p className="font-medium text-sm">{item.purpose?.name || 'N/A'}</p>
                             </div>
 
-                            <div>
-                              <p className="text-xs text-gray-500 uppercase">Address</p>
-                              <p>{item.street_house_no}, {item.brgy}, {item.municipality}, {item.province}</p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <p className="text-xs text-gray-500 uppercase">Schedule Date</p>
-                                <p>{formatDate(item.schedule_date)}</p>
+                                <p className="text-xs text-gray-500 uppercase">Appointment Date</p>
+                                <p className="text-sm">{formatDate(item.schedule_date)}</p>
                               </div>
                               <div>
                                 <p className="text-xs text-gray-500 uppercase">Time Slot</p>
-                                <p>{item.time_slot}</p>
+                                <p className="text-sm">{item.time_slot || 'N/A'}</p>
                               </div>
                             </div>
+
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase">Request Type</p>
+                              <Badge className={`mt-1 ${item.request_type === 'online' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                                {item.request_type === 'online' ? (
+                                  <>Online</>
+                                ) : (
+                                  <>Walk-in</>
+                                )}
+                              </Badge>
+                            </div>
                           </div>
-
-                          {item.status === "pending" && (
-                            <div className="flex justify-end gap-2 mt-4">
-                              <Button
-                                onClick={() => {
-                                  setSelectedAppointment(item);
-                                  setIsEditAppointmentOpen(true);
-                                }}
-                                aria-label="Edit appointment"
-                                className="h-9 w-9 p-0 rounded-full border-[#15592F] text-[#15592F] flex 
-                                bg-white hover:bg-[#15592F] hover:text-white items-center justify-center"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-
-                              <Button 
-                                variant="destructive" 
-                                className="h-9 px-3" 
-                                title="Cancel"
-                                onClick={() => handleCancelAppointment(item.id)}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          )}
-                          
-                          {item.status === "approved" && (
-                            <div className="flex justify-center mt-4">
-                              <span className="text-sm text-blue-600 font-medium">In Progress</span>
-                            </div>
-                          )}
-                          
-                          {/* No action section for completed status */}
-                          {item.status === "completed" && (
-                            <div className="flex justify-center mt-4">
-                              {transactionFeedbacks[item.id] ? (
-                                <Button
-                                  onClick={() => {
-                                    setSelectedTransactionId(item.id);
-                                    setIsViewFeedbackOpen(true);
-                                  }}
-                                  variant="outline"
-                                  size="sm"
-                                  className="w-full text-green-700 border-green-700 hover:bg-green-50"
-                                >
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  View Feedback
-                                </Button>
-                              ) : (
-                                <Button
-                                  onClick={() => {
-                                    setSelectedTransaction(item);
-                                    setIsGiveFeedbackOpen(true);
-                                  }}
-                                  size="sm"
-                                  className="w-full bg-[#15592F] hover:bg-[#124b28] text-white"
-                                >
-                                  <Star className="h-4 w-4 mr-2" />
-                                  Give Feedback
-                                </Button>
-                              )}
-                            </div>
-                          )}
                         </CardContent>
                       </Card>
                     ))
                   ) : (
                     <Card>
                       <CardContent className="py-10 text-center text-gray-500">
-                        {`No ${filter} appointments found.`}
+                        {filter === "All" 
+                          ? "No appointments found."
+                          : `No ${filter} appointments found.`
+                        }
                       </CardContent>
                     </Card>
                   )}
@@ -685,8 +735,18 @@ export default function Appointments() {
         open={isGiveFeedbackOpen}
         onOpenChange={setIsGiveFeedbackOpen}
         transaction={selectedTransaction}
-        onSubmitSuccess={() => {
+        onFeedbackSubmitted={() => {
           fetchAppointments();
+          setIsGiveFeedbackOpen(false);
+        }}
+      />
+      {/* Cancel Appointment Modal */}
+      <CancelAppointmentDialog
+        open={isCancelDialogOpen}
+        onOpenChange={setIsCancelDialogOpen}
+        appointment={appointmentToCancel}
+        onConfirm={async (reason) => {
+          await handleCancelAppointment(appointmentToCancel.id, reason);
         }}
       />
     </BackgroundLayout>

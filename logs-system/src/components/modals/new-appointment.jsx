@@ -20,13 +20,14 @@ import { createAppointment } from "@/api/appointmentApi";
 import { getProfile } from "@/api/profileApi";
 import { getAllPurposes } from "@/api/purposeApi";
 import { getUser } from "@/utils/auth";
+import { getApiBaseUrl } from "@/utils/apiConfig";
 import { toast } from "sonner";
 import { showErrorToast, getErrorMessage } from "@/utils/errorHandler";
 
 export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const [formData, setFormData] = useState({
     scheduleDate: "",
-    purpose: "",
+    purposeId: "", // Changed from purpose to purposeId
     timeSlot: "",
   });
 
@@ -44,6 +45,8 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const [fullSlots, setFullSlots] = useState([]);
   const [slotDetails, setSlotDetails] = useState({});
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [serverTime, setServerTime] = useState(null);
+  const [isMorningPast, setIsMorningPast] = useState(false);
 
   // Fetch user address data when dialog opens
   useEffect(() => {
@@ -109,10 +112,10 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     setLoadingSlots(true);
     try {
       const token = localStorage.getItem('auth_token');
-      const user = getUser();
       
-      // Include user_id to get user-specific slot information
-      const url = `${import.meta.env.VITE_API_URL}/appointments/available-slots?date=${formData.scheduleDate}&user_id=${user?.id || ''}`;
+      // Use centralized API config and authenticated user from token
+      const API_BASE_URL = getApiBaseUrl();
+      const url = `${API_BASE_URL}/appointments/available-slots?date=${formData.scheduleDate}`;
       console.log('🔍 Fetching slots from:', url);
       
       const response = await fetch(url, {
@@ -131,6 +134,31 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
         console.log('✅ Available slots:', data.available_slots);
         console.log('📈 Slot details:', data.slot_details);
         console.log('⚙️ Limits:', data.limits);
+        console.log('⏰ Server time:', data.server_time);
+        
+        // Store server time and check if morning is past
+        if (data.server_time) {
+          setServerTime(data.server_time);
+          const serverDate = new Date(data.server_time);
+          const serverHour = serverDate.getHours();
+          
+          // Check if selected date is today AND current time is >= 12:00 PM
+          const selectedDate = new Date(formData.scheduleDate + 'T00:00:00');
+          const todayDate = new Date(data.server_time);
+          todayDate.setHours(0, 0, 0, 0);
+          selectedDate.setHours(0, 0, 0, 0);
+          
+          const isToday = selectedDate.getTime() === todayDate.getTime();
+          const isPastNoon = serverHour >= 12;
+          
+          setIsMorningPast(isToday && isPastNoon);
+          
+          // If morning is past and morning is selected, switch to afternoon
+          if (isToday && isPastNoon && selectedPeriod === 'morning') {
+            setSelectedPeriod('afternoon');
+            toast.info('Morning time slots are no longer available for today');
+          }
+        }
         
         // Check if slot_details exists and has data
         if (!data.slot_details || Object.keys(data.slot_details).length === 0) {
@@ -238,7 +266,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
       toast.error("Please select a schedule date");
       return;
     }
-    if (!formData.purpose) {
+    if (!formData.purposeId) {
       setError("Please select a purpose for appointment");
       toast.error("Please select a purpose for appointment");
       return;
@@ -264,12 +292,11 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
     setError("");
 
     try {
-      // Include user address in the submission with correct field names for backend
+      // Pure relationship: Send only purpose_id, schedule_date, and time_slot
+      // Backend gets student_id from authenticated user
+      // Address comes from user table relationship
       const appointmentData = {
-        purpose: formData.purpose,
-        barangay: userAddress.barangay,
-        city: userAddress.municipality,
-        province: userAddress.province,
+        purpose_id: parseInt(formData.purposeId), // Send purpose_id as integer
         schedule_date: formData.scheduleDate,
         time_slot: formData.timeSlot,
       };
@@ -296,7 +323,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
       // Reset form and close dialog
       setFormData({
         scheduleDate: "",
-        purpose: "",
+        purposeId: "",
         timeSlot: "",
       });
       setAvailableSlots({ morning: [], afternoon: [] });
@@ -330,7 +357,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const handleCancel = () => {
     setFormData({
       scheduleDate: "",
-      purpose: "",
+      purposeId: "",
       timeSlot: "",
     });
     setError("");
@@ -397,8 +424,8 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                 Purpose for Appointment
               </Label>
               <Select
-                value={formData.purpose}
-                onValueChange={(value) => handleInputChange("purpose", value)}
+                value={formData.purposeId}
+                onValueChange={(value) => handleInputChange("purposeId", value)}
               >
                 <SelectTrigger className="h-10 rounded-lg border-2 text-sm sm:h-12 sm:rounded-xl sm:text-base lg:h-14 lg:text-lg">
                   <SelectValue placeholder="Select purpose" />
@@ -410,7 +437,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                     </SelectItem>
                   ) : (
                     purposes.map((purpose) => (
-                      <SelectItem key={purpose.id} value={purpose.name}>
+                      <SelectItem key={purpose.id} value={purpose.id.toString()}>
                         {purpose.name}
                       </SelectItem>
                     ))
@@ -465,17 +492,19 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
 
             {/* Period Selector */}
             <div className="flex gap-2 sm:gap-4 lg:gap-4">
-              <button
-                type="button"
-                onClick={() => setSelectedPeriod("morning")}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:flex-none sm:rounded-xl sm:px-4 sm:text-base lg:px-6 lg:py-3 lg:text-lg ${selectedPeriod === "morning"
-                    ? "bg-green-700 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-              >
-                <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
-                Morning
-              </button>
+              {!isMorningPast && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedPeriod("morning")}
+                  className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:flex-none sm:rounded-xl sm:px-4 sm:text-base lg:px-6 lg:py-3 lg:text-lg ${selectedPeriod === "morning"
+                      ? "bg-green-700 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                >
+                  <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
+                  Morning
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setSelectedPeriod("afternoon")}

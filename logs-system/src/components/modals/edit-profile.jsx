@@ -41,7 +41,15 @@ export default function EditProfileDialog({
   const [touched, setTouched] = useState({});
 
   useEffect(() => {
-    setForm(user);
+    // Initialize form with user data and ensure all address fields are set
+    setForm({
+      ...user,
+      region: user.region || '',
+      province: user.province || '',
+      municipality: user.municipality || '',
+      barangay: user.barangay || '',
+      status: user.status || 'Active', // Ensure status has a default value
+    });
   }, [user]);
 
   const initials = `${form.firstname?.charAt(0) ?? ""}${
@@ -104,6 +112,12 @@ export default function EditProfileDialog({
           }
         }
         break;
+
+      case "email":
+        if (!form[field] || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form[field])) {
+          fieldError = "Please enter a valid email address";
+        }
+        break;
     }
 
     if (fieldError) {
@@ -114,8 +128,8 @@ export default function EditProfileDialog({
   }
 
   async function handleSave() {
-    // Validate all name fields
-    const fieldsToValidate = ["firstname", "lastname"];
+    // Validate all required fields
+    const fieldsToValidate = ["firstname", "lastname", "email"];
     let isValid = true;
 
     fieldsToValidate.forEach((field) => {
@@ -124,11 +138,22 @@ export default function EditProfileDialog({
       }
     });
 
+    // Validate course and year level
+    if (!form.course) {
+      toast.error("Please select a course");
+      isValid = false;
+    }
+    if (!form.year) {
+      toast.error("Please select a year level");
+      isValid = false;
+    }
+
     // Mark all fields as touched
     setTouched({
       firstname: true,
       lastname: true,
       middlename: true,
+      email: true,
     });
 
     if (!isValid) {
@@ -140,8 +165,26 @@ export default function EditProfileDialog({
       setLoading(true);
       setError(null);
 
+      // Send all data - backend will update both users and masterlist tables
+      const updateData = {
+        // Masterlist fields (will update masterlist table)
+        firstname: form.firstname,
+        middlename: form.middlename || "",
+        lastname: form.lastname,
+        email: form.email,
+        course: form.course,
+        year: form.year,
+        // User fields (will update users table)
+        region: form.region || "",
+        province: form.province || "",
+        municipality: form.municipality || "",
+        barangay: form.barangay || "",
+        purok: form.purok || "",
+        suffix: form.suffix || "",
+      };
+
       // Call the API to update profile
-      const response = await updateProfile(form);
+      const response = await updateProfile(updateData);
 
       // Update local state with the response
       if (onSave) {
@@ -193,16 +236,22 @@ export default function EditProfileDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Email</Label>
+            <Label>Email <span className="text-red-500">*</span></Label>
 
             <Input
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
-              readOnly
-              className="bg-gray-100 cursor-not-allowed"
+              onBlur={() => handleBlur("email")}
+              className={touched.email && errors.email ? "border-red-500" : ""}
             />
+            {touched.email && errors.email && (
+              <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                <XCircle size={12} />
+                {errors.email}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -224,11 +273,11 @@ export default function EditProfileDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Middle Name (Optional)</Label>
+            <Label>Middle Name</Label>
 
             <Input
               name="middlename"
-              placeholder="Middle Name (Optional)"
+              placeholder="Middle Name"
               value={form.middlename || ""}
               onChange={handleChange}
               onBlur={() => handleBlur("middlename")}
@@ -261,10 +310,38 @@ export default function EditProfileDialog({
           </div>
 
           <div className="space-y-2">
+            <Label>Suffix</Label>
+
+            <Select
+              value={form.suffix || ""}
+              onValueChange={(value) =>
+                setForm({
+                  ...form,
+                  suffix: value,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                <SelectItem value="Jr.">Jr.</SelectItem>
+                <SelectItem value="Sr.">Sr.</SelectItem>
+                <SelectItem value="II">II</SelectItem>
+                <SelectItem value="III">III</SelectItem>
+                <SelectItem value="IV">IV</SelectItem>
+                <SelectItem value="V">V</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>Status</Label>
 
             <Select
-              value={form.status}
+              value={form.status || ""}
               onValueChange={(value) =>
                 setForm({
                   ...form,
@@ -282,8 +359,8 @@ export default function EditProfileDialog({
                   Active
                 </SelectItem>
 
-                <SelectItem value="inactive">
-                  inactive
+                <SelectItem value="Inactive">
+                  Inactive
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -292,7 +369,7 @@ export default function EditProfileDialog({
           {/* Course */}
 
           <div className="space-y-2">
-            <Label>Course</Label>
+            <Label>Course <span className="text-red-500">*</span></Label>
 
             <Select
               value={form.course}
@@ -312,9 +389,9 @@ export default function EditProfileDialog({
                     <SelectItem value="BTLED">BTLED</SelectItem>
                     <SelectItem value="BSABE">BSABE</SelectItem>
                     <SelectItem value="BSCRIM">BSCRIM</SelectItem>
-                    <SelectItem value="BAT">BSA</SelectItem>
+                    <SelectItem value="BSA">BSA</SelectItem>
                     <SelectItem value="BAT">BAT</SelectItem>
-                    <SelectItem value="BAT">BSF</SelectItem>
+                    <SelectItem value="BSF">BSF</SelectItem>
                   </SelectContent>
             </Select>
           </div>
@@ -322,7 +399,7 @@ export default function EditProfileDialog({
           {/* Year */}
 
           <div className="space-y-2">
-            <Label>Year Level</Label>
+            <Label>Year Level <span className="text-red-500">*</span></Label>
 
             <Select
               value={form.year}
@@ -360,6 +437,41 @@ export default function EditProfileDialog({
           {/* Address Section */}
           <div className="md:col-span-2 space-y-4 border-t pt-4 mt-4">
             <h3 className="text-base font-semibold">Address Information</h3>
+            
+            {/* Region Selector */}
+            <div className="space-y-2">
+              <Label>Region</Label>
+              <Select
+                value={form.region || ""}
+                onValueChange={(value) =>
+                  setForm({ ...form, region: value, province: "", municipality: "", barangay: "" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Region I - Ilocos Region">Region I - Ilocos Region</SelectItem>
+                  <SelectItem value="Region II - Cagayan Valley">Region II - Cagayan Valley</SelectItem>
+                  <SelectItem value="Region III - Central Luzon">Region III - Central Luzon</SelectItem>
+                  <SelectItem value="Region IV-A - CALABARZON">Region IV-A - CALABARZON</SelectItem>
+                  <SelectItem value="Region IV-B - MIMAROPA">Region IV-B - MIMAROPA</SelectItem>
+                  <SelectItem value="Region V - Bicol Region">Region V - Bicol Region</SelectItem>
+                  <SelectItem value="Region VI - Western Visayas">Region VI - Western Visayas</SelectItem>
+                  <SelectItem value="Region VII - Central Visayas">Region VII - Central Visayas</SelectItem>
+                  <SelectItem value="Region VIII - Eastern Visayas">Region VIII - Eastern Visayas</SelectItem>
+                  <SelectItem value="Region IX - Zamboanga Peninsula">Region IX - Zamboanga Peninsula</SelectItem>
+                  <SelectItem value="Region X - Northern Mindanao">Region X - Northern Mindanao</SelectItem>
+                  <SelectItem value="Region XI - Davao Region">Region XI - Davao Region</SelectItem>
+                  <SelectItem value="Region XII - SOCCSKSARGEN">Region XII - SOCCSKSARGEN</SelectItem>
+                  <SelectItem value="Region XIII - Caraga">Region XIII - Caraga</SelectItem>
+                  <SelectItem value="NCR - National Capital Region">NCR - National Capital Region</SelectItem>
+                  <SelectItem value="CAR - Cordillera Administrative Region">CAR - Cordillera Administrative Region</SelectItem>
+                  <SelectItem value="BARMM - Bangsamoro Autonomous Region in Muslim Mindanao">BARMM</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
             <AddressSelector
               province={form.province || ""}
               municipality={form.municipality || ""}
@@ -376,6 +488,17 @@ export default function EditProfileDialog({
               required={false}
               layout="grid"
             />
+            
+            {/* Purok Field */}
+            <div className="space-y-2">
+              <Label>Purok/Street (Optional)</Label>
+              <Input
+                name="purok"
+                placeholder="Enter Purok or Street"
+                value={form.purok || ""}
+                onChange={handleChange}
+              />
+            </div>
           </div>
 
         </div>

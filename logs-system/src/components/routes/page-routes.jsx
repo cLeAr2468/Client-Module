@@ -4,8 +4,10 @@ import AnnouncementPage from "@/components/pages/announcment";
 import Register from "@/components/pages/register";
 import Dashboard from "@/components/pages/dashboard";
 import Appointment from "@/components/pages/appointment";
+import AppointmentDetails from "@/components/pages/appointment-details";
 import HistoryTransactions from "@/components/pages/transact-history";
 import ProfileDisplay from "@/components/pages/profile-info";
+import Notifications from "@/components/pages/notifications";
 import ProtectedRoute from "./ProtectedRoute";
 
 function Reroutes() {
@@ -20,8 +22,11 @@ function Reroutes() {
       {/* Protected Routes - Require Authentication */}
       <Route path="/Dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/Appointments" element={<ProtectedRoute><Appointment /></ProtectedRoute>} />
+      <Route path="/Appointment/:id" element={<ProtectedRoute><AppointmentDetails /></ProtectedRoute>} />
+      <Route path="/Appointment-details/:id" element={<ProtectedRoute><AppointmentDetails /></ProtectedRoute>} />
       <Route path="/Transactions" element={<ProtectedRoute><HistoryTransactions /></ProtectedRoute>} />
       <Route path="/Profile" element={<ProtectedRoute><ProfileDisplay /></ProtectedRoute>} />
+      <Route path="/Notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
     </Routes>
   );
 }

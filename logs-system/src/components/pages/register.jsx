@@ -42,6 +42,7 @@ export default function Register() {
     barangay: "",
     municipality: "",
     province: "",
+    purok: "",
     course: "",
     year_level: "",
     password: "",
@@ -325,6 +326,7 @@ export default function Register() {
         barangay: "",
         municipality: "",
         province: "",
+        purok: "",
         course: "",
         year_level: "",
         password: "",
@@ -418,18 +420,22 @@ export default function Register() {
               {/* Middle Name - Mobile */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  Middle Name (Optional):
+                  Middle Name: <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="mname"
-                  placeholder="Middle Name (Optional)"
+                  placeholder="Middle Name"
                   className={`h-9 border bg-white text-sm ${
                     touched.mname && errors.mname ? "border-red-500" : "border-gray-300"
                   }`}
                   value={form.mname}
                   onChange={handleChange}
                   onBlur={() => handleBlur("mname")}
+                  required
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  If no middle name, please enter "NA"
+                </p>
                 {touched.mname && errors.mname && (
                   <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                     <XCircle size={12} />
@@ -562,6 +568,23 @@ export default function Register() {
                   required={true}
                   layout="stacked"
                 />
+                
+                {/* Purok Field - Optional */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Purok / Sitio (Optional)
+                  </label>
+                  <Input
+                    id="purok"
+                    placeholder="Enter Purok or Sitio (Optional)"
+                    className="h-9 border bg-white text-sm border-gray-300"
+                    value={form.purok}
+                    onChange={handleChange}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optional: Specify your purok or sitio
+                  </p>
+                </div>
               </div>
 
               {/* Password - Mobile */}

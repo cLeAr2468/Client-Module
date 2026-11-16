@@ -3,17 +3,17 @@ import api from './api';
 // ==================== APPOINTMENT APIs ====================
 
 /**
- * Create a new appointment
- * @param {Object} appointmentData - Appointment details
+ * Create a new appointment (Pure Relationship)
+ * @param {Object} appointmentData - Appointment details (purpose_id, schedule_date, time_slot)
  * @returns {Promise} API response
  */
 export const createAppointment = async (appointmentData) => {
   try {
+    // Pure relationship: Send only purpose_id, schedule_date, and time_slot
+    // Backend gets student_id from authenticated user
+    // Address comes from user table relationship
     const response = await api.post('/appointments', {
-      purpose: appointmentData.purpose,
-      barangay: appointmentData.barangay,
-      city: appointmentData.city,
-      province: appointmentData.province,
+      purpose_id: appointmentData.purpose_id,
       schedule_date: appointmentData.schedule_date,
       time_slot: appointmentData.time_slot,
     });
@@ -87,13 +87,16 @@ export const updateAppointment = async (appointmentId, appointmentData) => {
 };
 
 /**
- * Cancel user's appointment
+ * Cancel user's appointment with reason
  * @param {number} appointmentId - Appointment ID
+ * @param {string} reason - Cancellation reason
  * @returns {Promise} API response
  */
-export const cancelAppointment = async (appointmentId) => {
+export const cancelAppointment = async (appointmentId, reason) => {
   try {
-    const response = await api.put(`/appointments/${appointmentId}/cancel`);
+    const response = await api.put(`/appointments/${appointmentId}/cancel`, {
+      cancellation_reason: reason
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Failed to cancel appointment' };

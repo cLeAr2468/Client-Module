@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   CalendarClock,
   History,
+  Bell,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -24,7 +25,7 @@ import {
   AvatarFallback,
 } from "@/components/ui/avatar";
 import ChangePass from "@/components/modals/change-pass";
-import ServerSwitcher from "@/components/common/ServerSwitcher";
+import NotificationBell from "@/components/common/NotificationBell";
 import { logout } from "@/utils/auth";
 import { toast } from "sonner";
 import { getProfile } from "@/api/profileApi";
@@ -166,6 +167,18 @@ export default function DashboardHeader() {
                   <span>Transaction History</span>
                 </Link>
 
+                <Link
+                  to="/notifications"
+                  className={`flex items-center gap-2 rounded-md px-3 py-2 font-medium ${
+                    isActive("/notifications")
+                      ? "border-b-2 border-purple-500"
+                      : "hover:bg-green-700"
+                  }`}
+                >
+                  <Bell className="h-4 w-4" />
+                  <span>Notifications</span>
+                </Link>
+
                 <div className="relative">
                   <button
                     type="button"
@@ -298,8 +311,8 @@ export default function DashboardHeader() {
               </Link>
             </nav>
 
-            {/* Server Switcher */}
-            <ServerSwitcher />
+            {/* Notification Bell */}
+            <NotificationBell />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
