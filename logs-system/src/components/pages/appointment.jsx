@@ -78,6 +78,7 @@ export default function Appointments() {
     setError("");
     
     try {
+      console.log('📥 Fetching appointments...');
       const response = await getUserAppointments();
       console.log("✅ Appointments fetched:", response);
       const fetchedTransactions = response.transactions || [];
@@ -87,7 +88,13 @@ export default function Appointments() {
       fetchFeedbackStatuses(fetchedTransactions);
     } catch (err) {
       console.error("❌ Error fetching appointments:", err);
+      console.error("Error details:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
       setError(err.message || "Failed to load appointments");
+      toast.error(err.message || "Failed to load appointments");
     } finally {
       setLoading(false);
     }
@@ -98,33 +105,39 @@ export default function Appointments() {
     const completedTransactions = transactions.filter(t => t.status === 'completed');
     const feedbackMap = {};
 
-    await Promise.all(
-      completedTransactions.map(async (transaction) => {
-        try {
-          const token = localStorage.getItem('auth_token');
-          const API_BASE_URL = getApiBaseUrl(); // Use centralized API config
-          const response = await fetch(`${API_BASE_URL}/transaction/${transaction.id}/feedback-status`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            }
-          });
-          
-          if (!response.ok) {
-            console.error(`Failed to fetch feedback status for transaction ${transaction.id}: ${response.status}`);
-            feedbackMap[transaction.id] = false;
-            return;
+    // Process in batches to avoid overwhelming the server
+    for (const transaction of completedTransactions) {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const API_BASE_URL = getApiBaseUrl();
+        const url = `${API_BASE_URL}/transaction/${transaction.id}/feedback-status`;
+        
+        console.log(`Fetching feedback status for transaction ${transaction.id}...`);
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
           }
-          
-          const data = await response.json();
-          feedbackMap[transaction.id] = data.has_feedback;
-        } catch (err) {
-          console.error(`Error checking feedback for transaction ${transaction.id}:`, err);
+        });
+        
+        if (!response.ok) {
+          console.warn(`Failed to fetch feedback status for transaction ${transaction.id}: ${response.status}`);
           feedbackMap[transaction.id] = false;
+          continue;
         }
-      })
-    );
+        
+        const data = await response.json();
+        feedbackMap[transaction.id] = data.has_feedback;
+        console.log(`Transaction ${transaction.id} feedback status:`, data.has_feedback);
+      } catch (err) {
+        console.error(`Error checking feedback for transaction ${transaction.id}:`, err);
+        feedbackMap[transaction.id] = false;
+      }
+    }
 
+    console.log('All feedback statuses:', feedbackMap);
     setTransactionFeedbacks(feedbackMap);
   };
 
@@ -159,7 +172,7 @@ export default function Appointments() {
     ActivityLogger.appointmentUpdated(updatedData.id, updatedData);
     setIsEditAppointmentOpen(false);
     setSelectedAppointment(null);
-    // Refresh appointments list
+    // Refresh appointments list to show updated data
     fetchAppointments();
   };
 
@@ -735,7 +748,7 @@ export default function Appointments() {
         open={isGiveFeedbackOpen}
         onOpenChange={setIsGiveFeedbackOpen}
         transaction={selectedTransaction}
-        onFeedbackSubmitted={() => {
+        onSubmitSuccess={() => {
           fetchAppointments();
           setIsGiveFeedbackOpen(false);
         }}

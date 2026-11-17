@@ -26,13 +26,22 @@ export default function GiveFeedbackDialog({ open, onOpenChange, transaction, on
     try {
       setSubmitting(true);
       const token = localStorage.getItem('auth_token');
-      const API_BASE_URL = getApiBaseUrl(); // Use centralized API config
+      const API_BASE_URL = getApiBaseUrl();
+      const url = `${API_BASE_URL}/feedback`;
       
-      const response = await fetch(`${API_BASE_URL}/feedback`, {
+      console.log('🎯 Submitting feedback to:', url);
+      console.log('📋 Feedback data:', {
+        transaction_id: transaction.id,
+        rating,
+        message: message.trim()
+      });
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           transaction_id: transaction.id,
@@ -41,7 +50,11 @@ export default function GiveFeedbackDialog({ open, onOpenChange, transaction, on
         }),
       });
 
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', response.headers);
+
       const data = await response.json();
+      console.log('📊 Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to submit feedback');
@@ -61,7 +74,11 @@ export default function GiveFeedbackDialog({ open, onOpenChange, transaction, on
         onSubmitSuccess();
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      console.error('❌ Error submitting feedback:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
       toast.error(error.message || 'Failed to submit feedback');
     } finally {
       setSubmitting(false);

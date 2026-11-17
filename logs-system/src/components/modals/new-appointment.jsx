@@ -47,6 +47,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [serverTime, setServerTime] = useState(null);
   const [isMorningPast, setIsMorningPast] = useState(false);
+  const [pastTimeSlots, setPastTimeSlots] = useState([]);
 
   // Fetch user address data when dialog opens
   useEffect(() => {
@@ -141,8 +142,9 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
           setServerTime(data.server_time);
           const serverDate = new Date(data.server_time);
           const serverHour = serverDate.getHours();
+          const serverMinute = serverDate.getMinutes();
           
-          // Check if selected date is today AND current time is >= 12:00 PM
+          // Check if selected date is today
           const selectedDate = new Date(formData.scheduleDate + 'T00:00:00');
           const todayDate = new Date(data.server_time);
           todayDate.setHours(0, 0, 0, 0);
@@ -152,6 +154,41 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
           const isPastNoon = serverHour >= 12;
           
           setIsMorningPast(isToday && isPastNoon);
+          
+          // Calculate which specific time slots are past
+          const pastSlots = [];
+          if (isToday) {
+            // Convert time slots to 24-hour format and compare
+            const allTimeSlots = [...morningSlots, ...afternoonSlots];
+            allTimeSlots.forEach(slot => {
+              const [time, period] = slot.split(' ');
+              const [hours, minutes] = time.split(':').map(Number);
+              
+              // Convert to 24-hour format
+              let slot24Hour = hours;
+              if (period === 'PM' && hours !== 12) {
+                slot24Hour = hours + 12;
+              } else if (period === 'AM' && hours === 12) {
+                slot24Hour = 0;
+              }
+              
+              // Check if this slot time has passed
+              if (slot24Hour < serverHour || (slot24Hour === serverHour && minutes <= serverMinute)) {
+                pastSlots.push(slot);
+              }
+            });
+            
+            console.log('⏰ Past time slots:', pastSlots);
+            setPastTimeSlots(pastSlots);
+            
+            // Clear selected time slot if it's now in the past
+            if (formData.timeSlot && pastSlots.includes(formData.timeSlot)) {
+              setFormData(prev => ({ ...prev, timeSlot: '' }));
+              toast.warning('The selected time slot has passed. Please choose another slot.');
+            }
+          } else {
+            setPastTimeSlots([]);
+          }
           
           // If morning is past and morning is selected, switch to afternoon
           if (isToday && isPastNoon && selectedPeriod === 'morning') {
@@ -198,6 +235,10 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
 
   // Check if a time slot is available
   const isSlotAvailable = (timeSlot) => {
+    // Check if slot is in the past
+    if (pastTimeSlots.includes(timeSlot)) {
+      return false;
+    }
     return !fullSlots.includes(timeSlot);
   };
 
@@ -386,7 +427,7 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
             {/* Schedule Date */}
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-slate-700 lg:text-base">
-                Schedule Date
+                Appointment Date
               </Label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 sm:top-3 lg:h-6 lg:w-6 lg:top-3.5" />
@@ -525,6 +566,12 @@ export default function NewAppointmentDialog({ open, onOpenChange, onSubmit }) {
                   const slotInfo = getSlotInfo(slot);
                   const isAvailable = isSlotAvailable(slot);
                   const isSelected = formData.timeSlot === slot;
+                  const isPast = pastTimeSlots.includes(slot);
+                  
+                  // Don't render past time slots
+                  if (isPast) {
+                    return null;
+                  }
                   
                   return (
                     <button

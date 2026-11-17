@@ -66,20 +66,12 @@ export const getAppointment = async (appointmentId) => {
 /**
  * Update user's appointment
  * @param {number} appointmentId - Appointment ID
- * @param {Object} appointmentData - Updated appointment details
+ * @param {Object} appointmentData - Updated appointment details (schedule_date, purpose_id, time_slot)
  * @returns {Promise} API response
  */
 export const updateAppointment = async (appointmentId, appointmentData) => {
   try {
-    const response = await api.put(`/appointments/${appointmentId}`, {
-      purpose: appointmentData.purpose,
-      street_house_no: appointmentData.street,
-      brgy: appointmentData.barangay,
-      municipality: appointmentData.city,
-      province: appointmentData.province,
-      schedule_date: appointmentData.scheduleDate,
-      time_slot: appointmentData.timeSlot,
-    });
+    const response = await api.put(`/appointments/${appointmentId}`, appointmentData);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Failed to update appointment' };
