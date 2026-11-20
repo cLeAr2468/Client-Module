@@ -50,11 +50,22 @@ export default function AddressSelector({
     try {
       const allProvinces = getProvinces();
       // Convert to our format with clean display names
-      const formattedProvinces = allProvinces.map(prov => ({
+      let formattedProvinces = allProvinces.map(prov => ({
         code: prov.code,
         value: cleanDisplayText(prov.name),
         label: cleanDisplayText(prov.name)
       }));
+      
+      // If province is already set but not found in the list, add it as a custom entry
+      if (province && !formattedProvinces.find(p => p.value === province)) {
+        console.log('AddressSelector: Province not in standard list, adding as custom entry:', province);
+        formattedProvinces.push({
+          code: 'custom',
+          value: province,
+          label: `${province} (Saved)`
+        });
+      }
+      
       // Sort alphabetically by label
       const sortedProvinces = formattedProvinces.sort((a, b) => 
         a.label.localeCompare(b.label)
@@ -72,40 +83,53 @@ export default function AddressSelector({
       console.error("Error loading provinces:", error);
       setProvinces([]);
     }
-  }, []);
+  }, [province]);
 
   // Load municipalities when province changes (sorted alphabetically)
   useEffect(() => {
+    console.log('AddressSelector: Province changed to:', province, 'Provinces loaded:', provinces.length);
+    
     if (province && provinces.length > 0) {
       try {
         // Find province code by name
         const provinceObj = provinces.find(p => p.value === province);
+        console.log('AddressSelector: Found province object:', provinceObj);
+        
         if (provinceObj) {
           setSelectedProvinceCode(provinceObj.code);
           const cities = getCities(provinceObj.code);
           // Convert to our format with clean display names
-          const formattedMunicipalities = cities.map(city => ({
+          let formattedMunicipalities = cities.map(city => ({
             code: city.code,
             value: cleanDisplayText(city.name),
             label: cleanDisplayText(city.name)
           }));
+          
+          // If municipality is already set but not found in the list, add it as a custom entry
+          if (municipality && !formattedMunicipalities.find(m => m.value === municipality)) {
+            console.log('AddressSelector: Municipality not in standard list, adding as custom entry');
+            formattedMunicipalities.push({
+              code: 'custom',
+              value: municipality,
+              label: `${municipality} (Saved)`
+            });
+          }
+          
           // Sort alphabetically by label
           const sortedMunicipalities = formattedMunicipalities.sort((a, b) => 
             a.label.localeCompare(b.label)
           );
+          console.log('AddressSelector: Loaded municipalities:', sortedMunicipalities.length);
           setMunicipalities(sortedMunicipalities);
           
           // If municipality is already set (edit mode), immediately set municipality code
           if (municipality) {
+            console.log('AddressSelector: Looking for municipality:', municipality);
             const municipalityObj = sortedMunicipalities.find(m => m.value === municipality);
+            console.log('AddressSelector: Found municipality object:', municipalityObj);
+            
             if (municipalityObj) {
               setSelectedMunicipalityCode(municipalityObj.code);
-            } else {
-              // Municipality not in list, clear it
-              setSelectedMunicipalityCode(null);
-              setBarangays([]);
-              onMunicipalityChange("");
-              onBarangayChange("");
             }
           }
         }
@@ -114,16 +138,17 @@ export default function AddressSelector({
         setMunicipalities([]);
       }
     } else {
-      setMunicipalities([]);
-      setBarangays([]);
-      setSelectedProvinceCode(null);
-      setSelectedMunicipalityCode(null);
+      // Only clear if province is explicitly empty (not just unmatched)
       if (!province) {
+        setMunicipalities([]);
+        setBarangays([]);
+        setSelectedProvinceCode(null);
+        setSelectedMunicipalityCode(null);
         onMunicipalityChange("");
         onBarangayChange("");
       }
     }
-  }, [province, provinces]);
+  }, [province, provinces, municipality]);
 
   // Load barangays when municipality changes (sorted alphabetically)
   useEffect(() => {
@@ -131,24 +156,42 @@ export default function AddressSelector({
       try {
         // Find municipality code by name
         const municipalityObj = municipalities.find(m => m.value === municipality);
-        if (municipalityObj) {
+        if (municipalityObj && municipalityObj.code !== 'custom') {
           setSelectedMunicipalityCode(municipalityObj.code);
           const brgyList = getBarangays(municipalityObj.code);
           // Convert to our format with clean display names
-          const formattedBarangays = brgyList.map(brgy => ({
+          let formattedBarangays = brgyList.map(brgy => ({
             code: brgy.code,
             value: cleanDisplayText(brgy.name),
             label: cleanDisplayText(brgy.name)
           }));
+          
+          // If barangay is already set but not found in the list, add it as a custom entry
+          if (barangay && !formattedBarangays.find(b => b.value === barangay)) {
+            console.log('AddressSelector: Barangay not in standard list, adding as custom entry');
+            formattedBarangays.push({
+              code: 'custom',
+              value: barangay,
+              label: `${barangay} (Saved)`
+            });
+          }
+          
           // Sort alphabetically by label
           const sortedBarangays = formattedBarangays.sort((a, b) => 
             a.label.localeCompare(b.label)
           );
           setBarangays(sortedBarangays);
-          
-          // Clear barangay if current selection is not in the new list
-          if (barangay && !sortedBarangays.find(b => b.value === barangay)) {
-            onBarangayChange("");
+        } else if (municipalityObj && municipalityObj.code === 'custom') {
+          // If municipality is custom, we can't load barangays from API
+          // But if barangay exists, show it as a custom entry
+          if (barangay) {
+            setBarangays([{
+              code: 'custom',
+              value: barangay,
+              label: `${barangay} (Saved)`
+            }]);
+          } else {
+            setBarangays([]);
           }
         }
       } catch (error) {
@@ -156,13 +199,14 @@ export default function AddressSelector({
         setBarangays([]);
       }
     } else {
-      setBarangays([]);
-      setSelectedMunicipalityCode(null);
+      // Only clear if municipality is explicitly empty
       if (!municipality) {
+        setBarangays([]);
+        setSelectedMunicipalityCode(null);
         onBarangayChange("");
       }
     }
-  }, [municipality, municipalities]);
+  }, [municipality, municipalities, barangay]);
 
   const containerClass = layout === "grid" 
     ? "grid grid-cols-1 md:grid-cols-2 gap-4" 

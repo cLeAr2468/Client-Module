@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import AddressSelector from "@/components/common/AddressSelector";
+import { AddressSelectorComplete } from "@/components/common/AddressSelectorComplete";
 
 import { Mail, Lock, Eye, EyeOff, School, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -39,9 +39,11 @@ export default function Register() {
     mname: "",
     lname: "",
     email: "",
-    barangay: "",
-    municipality: "",
+    suffix: "",
+    region: "",
     province: "",
+    municipality: "",
+    barangay: "",
     purok: "",
     course: "",
     year_level: "",
@@ -52,6 +54,9 @@ export default function Register() {
   const [fetchingStudent, setFetchingStudent] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
+  // Suffix options
+  const suffixOptions = ['Jr.', 'Sr.', 'II', 'III', 'IV', 'V'];
 
   // Password validation (memoized for performance)
   const passwordValidation = useMemo(() => {
@@ -78,9 +83,6 @@ export default function Register() {
         mname: autoCapitalize(student.mname || ""),
         lname: autoCapitalize(student.lname || ""),
         email: student.email || "",
-        barangay: student.barangay || "",
-        municipality: student.municipality || "",
-        province: student.province || "",
         course: student.course || "",
         year_level: student.year_level || "",
       });
@@ -99,9 +101,6 @@ export default function Register() {
         mname: "",
         lname: "",
         email: "",
-        barangay: "",
-        municipality: "",
-        province: "",
         course: "",
         year_level: "",
       });
@@ -166,13 +165,15 @@ export default function Register() {
         break;
 
       case "mname":
-        // Middle name is optional
-        if (form[field]) {
-          const validation = validateTextInput(form[field], {
+        // Middle name is now required
+        if (!form.mname || form.mname.trim() === "") {
+          error = "Middle name is required";
+        } else {
+          const validation = validateTextInput(form.mname, {
             minLength: 1,
             maxLength: 50,
             allowSpecialChars: false,
-            required: false,
+            required: true,
           });
           if (!validation.isValid) {
             error = validation.error;
@@ -211,6 +212,7 @@ export default function Register() {
         }
         break;
 
+      case "region":
       case "province":
       case "municipality":
       case "barangay":
@@ -232,10 +234,12 @@ export default function Register() {
     const fields = [
       "student_id",
       "fname",
+      "mname",
       "lname",
       "email",
       "course",
       "year_level",
+      "region",
       "province",
       "municipality",
       "barangay",
@@ -264,10 +268,12 @@ export default function Register() {
     setTouched({
       student_id: true,
       fname: true,
+      mname: true,
       lname: true,
       email: true,
       course: true,
       year_level: true,
+      region: true,
       province: true,
       municipality: true,
       barangay: true,
@@ -468,6 +474,31 @@ export default function Register() {
                 )}
               </div>
 
+              {/* Suffix - Mobile */}
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  Suffix (Optional)
+                </label>
+                <Select
+                  value={form.suffix || ""}
+                  onValueChange={(value) =>
+                    setForm({ ...form, suffix: value === "" ? "" : value })
+                  }
+                >
+                  <SelectTrigger className="h-9 w-full border border-gray-300 bg-white text-sm">
+                    <SelectValue placeholder="Select Suffix" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {suffixOptions.map((suffix) => (
+                      <SelectItem key={suffix} value={suffix}>
+                        {suffix}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Course - Mobile */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
@@ -552,21 +583,23 @@ export default function Register() {
               {/* Address Selector - Mobile */}
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold">Address Information</h3>
-                <AddressSelector
-                  province={form.province}
-                  municipality={form.municipality}
-                  barangay={form.barangay}
-                  onProvinceChange={(value) =>
-                    setForm({ ...form, province: value, municipality: "", barangay: "" })
-                  }
-                  onMunicipalityChange={(value) =>
-                    setForm({ ...form, municipality: value, barangay: "" })
-                  }
-                  onBarangayChange={(value) => 
-                    setForm({ ...form, barangay: value })
-                  }
+                <AddressSelectorComplete
+                  values={{
+                    region: form.region,
+                    province: form.province,
+                    municipality: form.municipality,
+                    barangay: form.barangay
+                  }}
+                  onChange={(addressValues) => {
+                    setForm({ 
+                      ...form, 
+                      region: addressValues.region,
+                      province: addressValues.province,
+                      municipality: addressValues.municipality,
+                      barangay: addressValues.barangay
+                    });
+                  }}
                   required={true}
-                  layout="stacked"
                 />
                 
                 {/* Purok Field - Optional */}
@@ -844,18 +877,22 @@ export default function Register() {
 
                   <div>
                     <label className="mb-1.5 block text-sm font-medium">
-                      Middle Name (Optional):
+                      Middle Name: <span className="text-red-500">*</span>
                     </label>
                     <Input
                       id="mname"
-                      placeholder="Middle Name (Optional)"
+                      placeholder="Middle Name"
                       className={`h-10 border bg-white text-sm ${
                         touched.mname && errors.mname ? "border-red-500" : "border-gray-300"
                       }`}
                       value={form.mname}
                       onChange={handleChange}
                       onBlur={() => handleBlur("mname")}
+                      required
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      If no middle name, please enter "NA"
+                    </p>
                     {touched.mname && errors.mname && (
                       <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                         <XCircle size={12} />
@@ -864,7 +901,7 @@ export default function Register() {
                     )}
                   </div>
                 </div>
-                {/* Middle Name & Last Name - Desktop */}
+                {/* Last Name & Suffix - Desktop */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-1.5 block text-sm font-medium">
@@ -888,6 +925,34 @@ export default function Register() {
                       </p>
                     )}
                   </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium">
+                      Suffix (Optional)
+                    </label>
+                    <Select
+                      value={form.suffix || ""}
+                      onValueChange={(value) =>
+                        setForm({ ...form, suffix: value === "" ? "" : value })
+                      }
+                    >
+                      <SelectTrigger className="h-10 w-full border border-gray-300 bg-white text-sm">
+                        <SelectValue placeholder="Select Suffix" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {suffixOptions.map((suffix) => (
+                          <SelectItem key={suffix} value={suffix}>
+                            {suffix}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Email & Course - Desktop */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-1.5 block text-sm font-medium">
                       Email: <span className="text-red-500">*</span>
@@ -919,21 +984,23 @@ export default function Register() {
                 {/* Address Selector - Desktop */}
                 <div className="space-y-4 border-t pt-4">
                   <h3 className="text-base font-semibold">Address Information</h3>
-                  <AddressSelector
-                    province={form.province}
-                    municipality={form.municipality}
-                    barangay={form.barangay}
-                    onProvinceChange={(value) =>
-                      setForm({ ...form, province: value, municipality: "", barangay: "" })
-                    }
-                    onMunicipalityChange={(value) =>
-                      setForm({ ...form, municipality: value, barangay: "" })
-                    }
-                    onBarangayChange={(value) => 
-                      setForm({ ...form, barangay: value })
-                    }
+                  <AddressSelectorComplete
+                    values={{
+                      region: form.region,
+                      province: form.province,
+                      municipality: form.municipality,
+                      barangay: form.barangay
+                    }}
+                    onChange={(addressValues) => {
+                      setForm({ 
+                        ...form, 
+                        region: addressValues.region,
+                        province: addressValues.province,
+                        municipality: addressValues.municipality,
+                        barangay: addressValues.barangay
+                      });
+                    }}
                     required={true}
-                    layout="grid"
                   />
                 </div>
 

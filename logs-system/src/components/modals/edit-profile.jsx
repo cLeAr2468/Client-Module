@@ -42,15 +42,27 @@ export default function EditProfileDialog({
 
   useEffect(() => {
     // Initialize form with user data and ensure all address fields are set
-    setForm({
-      ...user,
-      region: user.region || '',
-      province: user.province || '',
-      municipality: user.municipality || '',
-      barangay: user.barangay || '',
-      status: user.status || 'Active', // Ensure status has a default value
-    });
-  }, [user]);
+    // Only reset form when dialog opens
+    if (open && user) {
+      console.log('Initializing edit profile form with user data:', {
+        region: user.region,
+        province: user.province,
+        municipality: user.municipality,
+        barangay: user.barangay,
+        purok: user.purok
+      });
+      
+      setForm({
+        ...user,
+        region: user.region || '',
+        province: user.province || '',
+        municipality: user.municipality || '',
+        barangay: user.barangay || '',
+        purok: user.purok || '',
+        status: user.status || 'Active', // Ensure status has a default value
+      });
+    }
+  }, [user, open]);
 
   const initials = `${form.firstname?.charAt(0) ?? ""}${
     form.lastname?.charAt(0) ?? ""
@@ -443,9 +455,14 @@ export default function EditProfileDialog({
               <Label>Region</Label>
               <Select
                 value={form.region || ""}
-                onValueChange={(value) =>
-                  setForm({ ...form, region: value, province: "", municipality: "", barangay: "" })
-                }
+                onValueChange={(value) => {
+                  // Only clear other fields if region actually changed
+                  if (value !== form.region) {
+                    setForm({ ...form, region: value, province: "", municipality: "", barangay: "" });
+                  } else {
+                    setForm({ ...form, region: value });
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Region" />
